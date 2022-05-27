@@ -1,0 +1,124 @@
+---
+title: "Template for 2D data analysis with INLABru"
+author: "J Matthiopoulos"
+date: '2022-05-27'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# I. Model fitting
+
+## I.1. Load libraries
+
+```{r results="hide",warning=FALSE,message=FALSE}
+# Essential
+library(inlabru)
+library(INLA)
+library(ggplot2)
+
+# Loaded dependencies
+#library(sp)
+#library(Matrix)
+#library(foreach)
+#library(parallel)
+
+# Optional
+library(mgcv) # For independent model performance comparisons, used as an exact method
+
+```
+## I.2. Load data
+In the example below, it is assumed that the data reside in a package, such as 'inlabru'. The 'try' option explores the list of available datasets. The second line loads the particular one. Other ways of importing the data, assuming they are not in a package ('?data') with option 'lib.loc' for pathname. 
+
+```{r eval=FALSE}
+try(data(package="inlabru"))
+data(gorillas, package = "inlabru")
+```
+
+## I.3. Ensure data formatting
+
+The overall structure of the data can be explored by 'str()'. The point locations (here, 'nests') need to be a 'SpatialPointsDataFrame'. If the point data are not in this form then, they will need to be converted by providing an appropriate spatial projection ('?SpatialPointsDataFrame').
+
+```{r eval=FALSE}
+str(gorillas)
+str(gorillas$nests)
+myPoints<-gorillas$nests # assign to shorthand
+```
+If the data set comes with in-built mesh and boundary components, then proceed to I.5, otherwise specify the mesh in the next section. 
+
+```{r eval=FALSE}
+str(gorillas$mesh)
+str(gorillas$boundary)
+myMesh<-gorillas$mesh # assign to shorthand
+myBoundary<-gorillas$boundary # assign to shorthand
+```
+
+## I.4. Build the mesh 
+
+----> HERE ADD MESH-BUILDING PSEUDOCODE
+
+Plot the points (the nests(. (The `ggplot2` function `coord_fixed()` sets the aspect ratio, 
+which defaults to 1.)
+
+```{r eval=FALSE, results="hide",warning=FALSE,message=FALSE}
+ggplot() +
+  gg(myMesh) +
+  gg(myPoints) +
+  gg(myBoundary) +
+  coord_fixed() +
+  ggtitle("Points")
+```
+
+## I.5. Specify spatial correlation structure
+The following is an example using a Matern correlation structure with a PC prior.
+
+```{r eval=FALSE}
+myCorrelation<-inla.spde2.pcmatern(myMesh, prior.range = c(5, 0.01), prior.sigma = c(0.1, 0.01))
+  
+```
+
+## I.6. Define model
+The model formula requires the explicit name 'coordinates' to recognise the mesh information that it will receive later, but can use the user-defined 'mySmooth()' to specify the spatial error term.  
+
+```{r eval=FALSE}
+
+myModel<-coordinates~mySmooth(coordinates, model=myCorrelation) + Intercept(1)
+  
+```
+
+## I.7 Fit the model
+ 
+
+```{r eval=FALSE, warning=FALSE, message=FALSE}
+
+myFit<-lgcp(myModel, data=myPoints, samplers=myBoundary, domain=list(coordinates=myMesh))
+  
+```
+
+# II. Model results
+
+
+
+# III. Model predictions
+The 'pixels()' command generates a regular grid of points which can be used for the prediction. This is stored as a spatial data frame in the user-defined 'myPredFrame'. 
+
+```{r eval=FALSE, warning=FALSE, message=FALSE}
+
+myPredFrame<-pixels(myMesh, nx = 50, ny = 50, mask = FALSE)
+myPreds<-predict(myFit, myPredFrame,~ exp(mySmooth + Intercept))
+  
+```
+To constrain the predictions to a particular region (e.g. the boundary of the mesh), set the mask option in the 'pixels()' command to 'mask=myBoundary'. Note that multiple functions and linear predictors can be predicted simultaneously, under different names.
+
+```{r eval=FALSE, warning=FALSE, message=FALSE}
+myPreds<-predict(myFit, myPredFrame,  
+                 ~ data.frame(lambda = exp(mySmooth + Intercept),
+                              loglambda = mySmooth + Intercept)
+                )
+  
+```
+
+
+## III.1
