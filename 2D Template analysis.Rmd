@@ -99,26 +99,125 @@ myFit<-lgcp(myModel, data=myPoints, samplers=myBoundary, domain=list(coordinates
 
 # II. Model results
 
+## II.1 Summary statistics
+```{r eval=FALSE,warning=FALSE,message=FALSE}
+summary(myFit)
+```
+
+## III.2 Plotting fixed effect parameters
+
+```{r eval=FALSE,warning=FALSE,message=FALSE}
+plot(myFit, "Intercept")
+```
+
+## III.3 Plotting spatial random effects
+Plots of the individual parameters
+
+```{r eval=FALSE,warning=FALSE,message=FALSE}
+spde.range <- spde.posterior(myFit, "mySmooth", what = "range")
+spde.logvar <- spde.posterior(myFit, "mySmooth", what = "log.variance")
+range.plot <- plot(spde.range)
+var.plot <- plot(spde.logvar)
+multiplot(range.plot, var.plot)
+```
+
+Plots of the correlation and covariance functions
+
+```{r eval=FALSE,warning=FALSE,message=FALSE}
+corplot <- plot(spde.posterior(myFit, "mySmooth", what = "matern.correlation"))
+covplot <- plot(spde.posterior(myFit, "mySmooth", what = "matern.covariance"))
+multiplot(covplot, corplot)
+```
+
+# III. Model selection and evaluation
 
 
-# III. Model predictions
+# IV. Model predictions
+
+## IV.1 Generate the prediction data frame
 The 'pixels()' command generates a regular grid of points which can be used for the prediction. This is stored as a spatial data frame in the user-defined 'myPredFrame'. 
 
 ```{r eval=FALSE, warning=FALSE, message=FALSE}
 
 myPredFrame<-pixels(myMesh, nx = 50, ny = 50, mask = FALSE)
+  
+```
+To constrain the predictions to a particular region (e.g. the boundary of the mesh), set the mask option in the 'pixels()' command to 'mask=myBoundary'.
+
+## IV.2 Generate predictions
+
+
+```{r eval=FALSE, warning=FALSE, message=FALSE}
+
 myPreds<-predict(myFit, myPredFrame,~ exp(mySmooth + Intercept))
   
 ```
-To constrain the predictions to a particular region (e.g. the boundary of the mesh), set the mask option in the 'pixels()' command to 'mask=myBoundary'. Note that multiple functions and linear predictors can be predicted simultaneously, under different names.
+Note that multiple functions and linear predictors can be predicted simultaneously, under different names.
 
 ```{r eval=FALSE, warning=FALSE, message=FALSE}
 myPreds<-predict(myFit, myPredFrame,  
-                 ~ data.frame(lambda = exp(mySmooth + Intercept),
-                              loglambda = mySmooth + Intercept)
+                 ~ data.frame(myLambda = exp(mySmooth + Intercept),
+                              myLoglambda = mySmooth + Intercept)
                 )
   
 ```
 
+## IV.3 Visualise the predictions
 
-## III.1
+Plotting intensity and log-intensity surfaces
+
+```{r eval=FALSE, warning=FALSE, message=FALSE}
+pl1 <- ggplot() +
+  gg(myPreds$myLambda) +
+  gg(myBoundary) +
+  ggtitle("LGCP fit to Points", subtitle = "(Response Scale)") +
+  coord_fixed()
+pl2 <- ggplot() +
+  gg(myPreds$myLoglambda) +
+  gg(myBoundary) +
+  ggtitle("LGCP fit to Points", subtitle = "(Linear Predictor Scale)") +
+  coord_fixed()
+multiplot(pl1, pl2, cols = 2)
+```
+
+Alternatively, plotting maps of median, lower 95% and upper 95% density surfaces as follows (assuming that the predicted intensity is in object `myLambda`).
+
+```{r eval=FALSE,warning=FALSE,message=FALSE,fig.width=9,fig.height=4}
+ggplot() +
+  gg(cbind(myPreds$myLambda, data.frame(property = "q0.500")), aes(fill = median)) +
+  gg(cbind(myPreds$myLambda, data.frame(property = "q0.025")), aes(fill = q0.025)) +
+  gg(cbind(myPreds$myLambda, data.frame(property = "q0.975")), aes(fill = q0.975)) +
+  coord_equal() +
+  facet_wrap(~property)
+```
+
+
+## IV.4 Estimating abundance
+
+Estimating abundance uses the `predict` function. As a first step we need an estimate
+ for the integrated lambda (denoted 'Lambda' with an upper case L). The integration `weight` values (the quadrature points) are contained in the `ipoints` output. 
+ 
+
+```{r eval=FALSE,warning=FALSE,message=FALSE,echo=TRUE}
+Lambda <- predict(
+  myFit,
+  ipoints(myBoundary, myMesh),
+  ~ sum(weight * exp(mySmooth + Intercept))
+)
+Lambda
+```
+
+
+Use the median and 95%iles of this to determine interval boundaries for estimating the posterior abundance distribution (prediction, not credible interval).
+
+```{r eval=FALSE,warning=FALSE,message=FALSE,echo=TRUE}
+abundance <- predict(
+  myFit, ipoints(myBoundary, myMesh),
+  ~ data.frame(
+    N = 500:800,
+    dpois(500:800,
+      lambda = sum(weight * exp(mySmooth + Intercept))
+    )
+  )
+)
+```
