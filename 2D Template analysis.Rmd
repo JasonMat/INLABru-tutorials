@@ -2,7 +2,9 @@
 title: "Template for 2D data analysis with INLABru"
 author: "J Matthiopoulos"
 date: '2022-05-27'
-output: pdf_document
+output:
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -220,4 +222,22 @@ abundance <- predict(
     )
   )
 )
+```
+
+## IV.5 Visualise posterior for abundance
+Get its quantiles via
+
+```{r eval=FALSE, warning=FALSE,message=FALSE,echo=TRUE}
+inla.qmarginal(c(0.025, 0.5, 0.975), marginal = list(x = Nest$N, y = Nest$mean))
+```
+... the mean via
+```{r eval=FALSE, warning=FALSE,message=FALSE,echo=TRUE}
+inla.emarginal(identity, marginal = list(x = Nest$N, y = Nest$mean))
+```
+and plot posteriors:
+```{r eval=FALSE, results="hide",warning=FALSE,message=FALSE,echo=TRUE}
+Nest$plugin_estimate <- dpois(Nest$N, lambda = Lambda$mean)
+ggplot(data = Nest) +
+  geom_line(aes(x = N, y = mean, colour = "Posterior")) +
+  geom_line(aes(x = N, y = plugin_estimate, colour = "Plugin"))
 ```

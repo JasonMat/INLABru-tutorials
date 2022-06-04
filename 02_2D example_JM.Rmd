@@ -34,6 +34,7 @@ library(inlabru)
 library(INLA)
 library(mgcv)
 library(ggplot2)
+library(ggpolypath)
 ```
 
 # Get the data
@@ -209,7 +210,7 @@ Lambda <- predict(
 Lambda
 ```
 
-Given some generous interval boundaries (500, 800) for lambda we can estimate the posterior abundance distribution via
+Given some generous interval boundaries (500, 800) for lambda we can estimate the posterior abundance distribution via (Question: Does this version of the posterior contain parameter uncertainty? Or is lambda calculated on the basis of some median from the preceding summary step, above? Look below, in the final output of the tutorial, at the comparison with the plugin posterior. The posterior produced here is wider than the plugin. This indicates that the `lambda=sum()` operation below is doing something more clever than aggregating unit rates from a single surface).
 ```{r,warning=FALSE,message=FALSE,echo=TRUE}
 Nest <- predict(
   fit, ipoints(boundary, mesh),
