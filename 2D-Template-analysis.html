@@ -1866,15 +1866,18 @@ credible interval).</p>
   )
 )</code></pre>
 <p>Can get the quantiles of the posterior for abundance via</p>
-<pre class="r"><code>inla.qmarginal(c(0.025, 0.5, 0.975), marginal = list(x = Nest$N, y = Nest$mean))</code></pre>
+<pre class="r"><code>inla.qmarginal(c(0.025, 0.5, 0.975), marginal = list(x = abundance$N, y = abundance$mean))</code></pre>
 <p>… the mean via</p>
-<pre class="r"><code>inla.emarginal(identity, marginal = list(x = Nest$N, y = Nest$mean))</code></pre>
+<pre class="r"><code>inla.emarginal(identity, marginal = list(x = abundance$N, y = abundance$mean))</code></pre>
 <p>and plot posteriors:</p>
-<pre class="r"><code>Nest$plugin_estimate &lt;- dpois(Nest$N, lambda = Lambda$mean)
-ggplot(data = Nest) +
+<pre class="r"><code>abundance$plugin_estimate &lt;- dpois(abundance$N, lambda = Lambda$mean)
+ggplot(data = abundance) +
   geom_line(aes(x = N, y = mean, colour = &quot;Posterior&quot;)) +
   geom_line(aes(x = N, y = plugin_estimate, colour = &quot;Plugin&quot;))</code></pre>
 </div>
+</div>
+<div id="iv.-factor-glm-with-spde-spatial-term" class="section level1">
+<h1>IV. Factor GLM with SPDE spatial term</h1>
 </div>
 
 

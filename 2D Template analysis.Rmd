@@ -129,7 +129,7 @@ Lambda1
 ```
 ## II.1 A GLM with a continuous covariate only
 
-# III. SPDE models
+# III. SPDE model, no covariates
 
 ## III.1. Build the SPDE mesh 
 
@@ -160,7 +160,7 @@ Then, define the model. The model formula requires the explicit name 'coordinate
 
 ```{r eval=FALSE}
 
-myModel<-coordinates~mySmooth(coordinates, model=myCorrelation) + Intercept(1)
+mySpdeComp<-coordinates~mySmooth(coordinates, model=myCorrelation) + Intercept(1)
   
 ```
 The `lcgp` models is fitted as follows:
@@ -168,13 +168,13 @@ The `lcgp` models is fitted as follows:
 
 ```{r eval=FALSE, warning=FALSE, message=FALSE}
 
-myFit<-lgcp(myModel, data=myPoints, samplers=myBoundary, domain=list(coordinates=myMesh))
+mySpdeFit<-lgcp(mySpdeComp, data=myPoints, samplers=myBoundary, domain=list(coordinates=myMesh))
   
 ```
 Summary statistics:
 
 ```{r eval=FALSE,warning=FALSE,message=FALSE}
-summary(myFit)
+summary(mySpdeFit)
 ```
 
 ## III.3 Inference 
@@ -182,15 +182,15 @@ summary(myFit)
 Plotting fixed effect parameters
 
 ```{r eval=FALSE,warning=FALSE,message=FALSE}
-plot(myFit, "Intercept")
+plot(mySpdeFit, "Intercept")
 ```
 
 Plotting spatial random effects
 Plots of the individual parameters
 
 ```{r eval=FALSE,warning=FALSE,message=FALSE}
-spde.range <- spde.posterior(myFit, "mySmooth", what = "range")
-spde.logvar <- spde.posterior(myFit, "mySmooth", what = "log.variance")
+spde.range <- spde.posterior(mySpdeFit, "mySmooth", what = "range")
+spde.logvar <- spde.posterior(mySpdeFit, "mySmooth", what = "log.variance")
 range.plot <- plot(spde.range)
 var.plot <- plot(spde.logvar)
 multiplot(range.plot, var.plot)
@@ -199,8 +199,8 @@ multiplot(range.plot, var.plot)
 Plots of the correlation and covariance functions
 
 ```{r eval=FALSE,warning=FALSE,message=FALSE}
-corplot <- plot(spde.posterior(myFit, "mySmooth", what = "matern.correlation"))
-covplot <- plot(spde.posterior(myFit, "mySmooth", what = "matern.covariance"))
+corplot <- plot(spde.posterior(mySpdeFit, "mySmooth", what = "matern.correlation"))
+covplot <- plot(spde.posterior(mySpdeFit, "mySmooth", what = "matern.covariance"))
 multiplot(covplot, corplot)
 ```
 
@@ -220,13 +220,13 @@ Now we can generate the predictions.
 
 ```{r eval=FALSE, warning=FALSE, message=FALSE}
 
-myPreds<-predict(myFit, myPredFrame,~ exp(mySmooth + Intercept))
+myPreds<-predict(mySpdeFit, myPredFrame,~ exp(mySmooth + Intercept))
   
 ```
 Note that multiple functions and linear predictors can be predicted simultaneously, under different names.
 
 ```{r eval=FALSE, warning=FALSE, message=FALSE}
-myPreds<-predict(myFit, myPredFrame,  
+myPreds<-predict(mySpdeFit, myPredFrame,  
                  ~ data.frame(myLambda = exp(mySmooth + Intercept),
                               myLoglambda = mySmooth + Intercept)
                 )
@@ -271,7 +271,7 @@ Estimating abundance uses the `predict` function. As a first step we need an est
 
 ```{r eval=FALSE,warning=FALSE,message=FALSE,echo=TRUE}
 Lambda <- predict(
-  myFit,
+  mySpdeFit,
   ipoints(myBoundary, myMesh),
   ~ sum(weight * exp(mySmooth + Intercept))
 )
@@ -283,7 +283,7 @@ Use the median and 95%iles of this to determine interval boundaries for estimati
 
 ```{r eval=FALSE,warning=FALSE,message=FALSE,echo=TRUE}
 abundance <- predict(
-  myFit, ipoints(myBoundary, myMesh),
+  mySpdeFit, ipoints(myBoundary, myMesh),
   ~ data.frame(
     N = 500:800,
     dpois(500:800,
@@ -296,16 +296,26 @@ abundance <- predict(
 Can get the quantiles of the posterior for abundance via
 
 ```{r eval=FALSE, warning=FALSE,message=FALSE,echo=TRUE}
-inla.qmarginal(c(0.025, 0.5, 0.975), marginal = list(x = Nest$N, y = Nest$mean))
+inla.qmarginal(c(0.025, 0.5, 0.975), marginal = list(x = abundance$N, y = abundance$mean))
 ```
 ... the mean via
 ```{r eval=FALSE, warning=FALSE,message=FALSE,echo=TRUE}
-inla.emarginal(identity, marginal = list(x = Nest$N, y = Nest$mean))
+inla.emarginal(identity, marginal = list(x = abundance$N, y = abundance$mean))
 ```
 and plot posteriors:
 ```{r eval=FALSE, results="hide",warning=FALSE,message=FALSE,echo=TRUE}
-Nest$plugin_estimate <- dpois(Nest$N, lambda = Lambda$mean)
-ggplot(data = Nest) +
+abundance$plugin_estimate <- dpois(abundance$N, lambda = Lambda$mean)
+ggplot(data = abundance) +
   geom_line(aes(x = N, y = mean, colour = "Posterior")) +
   geom_line(aes(x = N, y = plugin_estimate, colour = "Plugin"))
+```
+
+# IV. Factor GLM with SPDE spatial term
+This will borrow the same (Matern) correlation structure as defined in part III above `myCorrelation`. The combined model is defined as follows. Note the removal of the intercept under the factor model 'factor_full'. 
+
+```{r results='hide',warning=FALSE,message=FALSE}
+mySpdeGlm <- coordinates ~
+-1 +
+  vegetation(gcov$vegetation, model = "factor_full") +
+  mySmooth(coordinates, model = myCorrelation)
 ```
