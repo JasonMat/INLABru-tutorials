@@ -1,6 +1,6 @@
 ---
 title: "Template for 2D data analysis with INLABru"
-author: "J Matthiopoulos"
+author: "J Matthiopoulos (collated from INLABru vignettes)"
 date: '2022-05-27'
 output:
   html_document:
@@ -75,14 +75,14 @@ ggplot() +
 
 
 
-# II. A GLM model
+# II. GLMs
 
-# II.1 A GLM with the factor covariate only
-To construct a model with vegetation type as a fixed effect, we need to tell 'lgcp' how to find the vegetation type at any point in space, and we do this by creating model components with a fixed effect that we call `myFactor` (we could call it anything), as follows:
+# II.1 A GLM with a factor covariate only
+To construct a model with vegetation type as a fixed effect, we need to tell 'lgcp' how to find the vegetation type at any point in space, and we do this by creating model components with a fixed effect that we call `vegetation` (we could call it anything), as follows:
 
 
 ```{r eval=FALSE, warning=FALSE,message=FALSE}
-myFactComp <- coordinates ~ myFactor(myCovs$vegetation, model = "factor_full") - 1
+myFactComp <- coordinates ~ vegetation(myCovs$vegetation, model = "factor_full") - 1
 ```
 
 Notes:
@@ -96,13 +96,36 @@ an intercept. Instead, we can either use `model="factor_full"` without an interc
 or `model="factor_contrast"`, which does remove the first level.
 
 ```{r eval=FALSE, warning=FALSE,message=FALSE}
-myFactCompAlt <- coordinates ~ myFactor(gcov$vegetation, model = "factor_contrast") + Intercept(1)
+myFactCompAlt <- coordinates ~ vegetation(gcov$vegetation, model = "factor_contrast") + Intercept(1)
 ```
-
-## II.2 Fit the model
+The model can be fitted as follows
 
 ```{r eval=FALSE, results='hide',warning=FALSE,message=FALSE,eval=FALSE}
 myFactorGLM <- lgcp(myFactComp, myPoints, samplers = myBoundary, domain = list(coordinates = myMesh))
+```
+
+
+Predict the intensity, and plot the median intensity surface. The `predidct` function of `inlabru` takes into its `data` argument a `SpatialPointsDataFrame`, 
+a `SpatialPixelsDataFrame` or a `data.frame`. We can use the `inlabru` function `pixels` to generate
+a `SpatialPixelsDataFrame` only within the boundary, using its `mask` argument, as shown below.
+
+
+```{r eval=FALSE, warning=FALSE,message=FALSE}
+df <- pixels(myMesh, mask = myBoundary)
+int1 <- predict(myFactorGLM, data = df, ~ exp(vegetation))
+ggplot() +
+  gg(int1) +
+  gg(myBoundary, alpha = 0, lwd = 2) +
+  gg(myPoints, color = "DarkGreen") +
+  coord_equal()
+```
+
+The estimated total abundance of points (but not full posterior) can be obtained as follows.The integration `weight` values (the quadrature points) are contained in the `ipoints` output.
+
+```{r eval=FALSE, warning=FALSE,message=FALSE}
+ips <- ipoints(myBoundary, myMesh)
+Lambda1 <- predict(myFactorGLM, ips, ~ sum(weight * exp(vegetation)))
+Lambda1
 ```
 
 
