@@ -1753,8 +1753,8 @@ Lambda1</code></pre>
 <h2>II.1 A GLM with a continuous covariate only</h2>
 </div>
 </div>
-<div id="iii.-spde-models" class="section level1">
-<h1>III. SPDE models</h1>
+<div id="iii.-spde-model-no-covariates" class="section level1">
+<h1>III. SPDE model, no covariates</h1>
 <div id="iii.1.-build-the-spde-mesh" class="section level2">
 <h2>III.1. Build the SPDE mesh</h2>
 <p>—-&gt; HERE ADD MESH-BUILDING PSEUDOCODE</p>
@@ -1777,26 +1777,26 @@ example using a Matern correlation structure with a PC prior.</p>
 ‘coordinates’ to recognise the mesh information that it will receive
 later, but can use the user-defined ‘mySmooth()’ to specify the spatial
 error term.</p>
-<pre class="r"><code>myModel&lt;-coordinates~mySmooth(coordinates, model=myCorrelation) + Intercept(1)</code></pre>
+<pre class="r"><code>mySpdeComp&lt;-coordinates~mySmooth(coordinates, model=myCorrelation) + Intercept(1)</code></pre>
 <p>The <code>lcgp</code> models is fitted as follows:</p>
-<pre class="r"><code>myFit&lt;-lgcp(myModel, data=myPoints, samplers=myBoundary, domain=list(coordinates=myMesh))</code></pre>
+<pre class="r"><code>mySpdeFit&lt;-lgcp(mySpdeComp, data=myPoints, samplers=myBoundary, domain=list(coordinates=myMesh))</code></pre>
 <p>Summary statistics:</p>
-<pre class="r"><code>summary(myFit)</code></pre>
+<pre class="r"><code>summary(mySpdeFit)</code></pre>
 </div>
 <div id="iii.3-inference" class="section level2">
 <h2>III.3 Inference</h2>
 <p>Plotting fixed effect parameters</p>
-<pre class="r"><code>plot(myFit, &quot;Intercept&quot;)</code></pre>
+<pre class="r"><code>plot(mySpdeFit, &quot;Intercept&quot;)</code></pre>
 <p>Plotting spatial random effects Plots of the individual
 parameters</p>
-<pre class="r"><code>spde.range &lt;- spde.posterior(myFit, &quot;mySmooth&quot;, what = &quot;range&quot;)
-spde.logvar &lt;- spde.posterior(myFit, &quot;mySmooth&quot;, what = &quot;log.variance&quot;)
+<pre class="r"><code>spde.range &lt;- spde.posterior(mySpdeFit, &quot;mySmooth&quot;, what = &quot;range&quot;)
+spde.logvar &lt;- spde.posterior(mySpdeFit, &quot;mySmooth&quot;, what = &quot;log.variance&quot;)
 range.plot &lt;- plot(spde.range)
 var.plot &lt;- plot(spde.logvar)
 multiplot(range.plot, var.plot)</code></pre>
 <p>Plots of the correlation and covariance functions</p>
-<pre class="r"><code>corplot &lt;- plot(spde.posterior(myFit, &quot;mySmooth&quot;, what = &quot;matern.correlation&quot;))
-covplot &lt;- plot(spde.posterior(myFit, &quot;mySmooth&quot;, what = &quot;matern.covariance&quot;))
+<pre class="r"><code>corplot &lt;- plot(spde.posterior(mySpdeFit, &quot;mySmooth&quot;, what = &quot;matern.correlation&quot;))
+covplot &lt;- plot(spde.posterior(mySpdeFit, &quot;mySmooth&quot;, what = &quot;matern.covariance&quot;))
 multiplot(covplot, corplot)</code></pre>
 </div>
 <div id="iii.4-model-predictions" class="section level2">
@@ -1810,10 +1810,10 @@ prediction. This is stored as a spatial data frame in the user-defined
 boundary of the mesh), set the mask option in the ‘pixels()’ command to
 ‘mask=myBoundary’.</p>
 <p>Now we can generate the predictions.</p>
-<pre class="r"><code>myPreds&lt;-predict(myFit, myPredFrame,~ exp(mySmooth + Intercept))</code></pre>
+<pre class="r"><code>myPreds&lt;-predict(mySpdeFit, myPredFrame,~ exp(mySmooth + Intercept))</code></pre>
 <p>Note that multiple functions and linear predictors can be predicted
 simultaneously, under different names.</p>
-<pre class="r"><code>myPreds&lt;-predict(myFit, myPredFrame,  
+<pre class="r"><code>myPreds&lt;-predict(mySpdeFit, myPredFrame,  
                  ~ data.frame(myLambda = exp(mySmooth + Intercept),
                               myLoglambda = mySmooth + Intercept)
                 )</code></pre>
@@ -1848,7 +1848,7 @@ first step we need an estimate for the integrated lambda (denoted
 values (the quadrature points) are contained in the <code>ipoints</code>
 output.</p>
 <pre class="r"><code>Lambda &lt;- predict(
-  myFit,
+  mySpdeFit,
   ipoints(myBoundary, myMesh),
   ~ sum(weight * exp(mySmooth + Intercept))
 )
@@ -1857,7 +1857,7 @@ Lambda</code></pre>
 for estimating the posterior abundance distribution (prediction, not
 credible interval).</p>
 <pre class="r"><code>abundance &lt;- predict(
-  myFit, ipoints(myBoundary, myMesh),
+  mySpdeFit, ipoints(myBoundary, myMesh),
   ~ data.frame(
     N = 500:800,
     dpois(500:800,
@@ -1878,6 +1878,14 @@ ggplot(data = abundance) +
 </div>
 <div id="iv.-factor-glm-with-spde-spatial-term" class="section level1">
 <h1>IV. Factor GLM with SPDE spatial term</h1>
+<p>This will borrow the same (Matern) correlation structure as defined
+in part III above <code>myCorrelation</code>. The combined model is
+defined as follows. Note the removal of the intercept under the factor
+model ‘factor_full’.</p>
+<pre class="r"><code>mySpdeGlm &lt;- coordinates ~
+-1 +
+  vegetation(gcov$vegetation, model = &quot;factor_full&quot;) +
+  mySmooth(coordinates, model = myCorrelation)</code></pre>
 </div>
 
 
