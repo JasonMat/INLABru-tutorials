@@ -11,7 +11,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# I. Model fitting
+# I. Preparation
 
 ## I.1. Load libraries
 
@@ -19,7 +19,11 @@ knitr::opts_chunk$set(echo = TRUE)
 # Essential
 library(inlabru)
 library(INLA)
+bru_options_set(inla.mode = "experimental")
+
+# Visualisation
 library(ggplot2)
+library(RColorBrewer)
 
 # Loaded dependencies
 #library(sp)
@@ -29,6 +33,7 @@ library(ggplot2)
 
 # Optional
 library(mgcv) # For independent model performance comparisons, used as an exact method
+
 
 ```
 ## I.2. Load data
@@ -47,6 +52,7 @@ The overall structure of the data can be explored by 'str()'. The point location
 str(gorillas)
 str(gorillas$nests)
 myPoints<-gorillas$nests # assign to shorthand
+myCovs <- gorillas$gcov # Covariate data
 ```
 If the data set comes with in-built mesh and boundary components, then proceed to I.5, otherwise specify the mesh in the next section. 
 
@@ -56,8 +62,53 @@ str(gorillas$boundary)
 myMesh<-gorillas$mesh # assign to shorthand
 myBoundary<-gorillas$boundary # assign to shorthand
 ```
+Visualise the factor covariate data (`vegetation` type)
 
-## I.4. Build the mesh 
+```{r eval=FALSE, warning=FALSE, message=FALSE}
+ggplot() +
+  gg(myCovs$vegetation) +
+  gg(myMesh) +
+  gg(myBoundary) +
+  gg(myPoints, color = "white", cex = 0.5) +
+  coord_equal()
+```
+
+
+
+# II. A GLM model
+
+# II.1 A GLM with the factor covariate only
+To construct a model with vegetation type as a fixed effect, we need to tell 'lgcp' how to find the vegetation type at any point in space, and we do this by creating model components with a fixed effect that we call `myFactor` (we could call it anything), as follows:
+
+
+```{r eval=FALSE, warning=FALSE,message=FALSE}
+myFactComp <- coordinates ~ myFactor(myCovs$vegetation, model = "factor_full") - 1
+```
+
+Notes:
+
+* We need to tell 'lgcp' that this is a factor fixed effect, which we do 
+with `model="factor_full"`, giving one coefficient for each factor level.
+* We need to be careful about overparameterisation when using factors.
+Unlike regression models like `lm()`, `glm()` or `gam()`, `lgcp()`,
+`inlabru` does not automatically remove the first level and absorb it into
+an intercept. Instead, we can either use `model="factor_full"` without an intercept,
+or `model="factor_contrast"`, which does remove the first level.
+
+```{r eval=FALSE, warning=FALSE,message=FALSE}
+myFactCompAlt <- coordinates ~ myFactor(gcov$vegetation, model = "factor_contrast") + Intercept(1)
+```
+
+## II.2 Fit the model
+
+```{r eval=FALSE, results='hide',warning=FALSE,message=FALSE,eval=FALSE}
+myFactorGLM <- lgcp(myFactComp, myPoints, samplers = myBoundary, domain = list(coordinates = myMesh))
+```
+
+
+# III. An SPDE model
+
+## III.1. Build the SPDE mesh 
 
 ----> HERE ADD MESH-BUILDING PSEUDOCODE
 
@@ -73,7 +124,7 @@ ggplot() +
   ggtitle("Points")
 ```
 
-## I.5. Specify spatial correlation structure
+## III.2. Specify spatial correlation structure
 The following is an example using a Matern correlation structure with a PC prior.
 
 ```{r eval=FALSE}
@@ -81,7 +132,7 @@ myCorrelation<-inla.spde2.pcmatern(myMesh, prior.range = c(5, 0.01), prior.sigma
   
 ```
 
-## I.6. Define model
+## III.3. Define model
 The model formula requires the explicit name 'coordinates' to recognise the mesh information that it will receive later, but can use the user-defined 'mySmooth()' to specify the spatial error term.  
 
 ```{r eval=FALSE}
@@ -90,7 +141,7 @@ myModel<-coordinates~mySmooth(coordinates, model=myCorrelation) + Intercept(1)
   
 ```
 
-## I.7 Fit the model
+## III.4 Fit the model
  
 
 ```{r eval=FALSE, warning=FALSE, message=FALSE}
