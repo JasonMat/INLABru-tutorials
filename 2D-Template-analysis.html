@@ -9,7 +9,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="J Matthiopoulos" />
+<meta name="author" content="J Matthiopoulos (collated from INLABru vignettes)" />
 
 <meta name="date" content="2022-05-27" />
 
@@ -1636,20 +1636,25 @@ pre code {
 
 <h1 class="title toc-ignore">Template for 2D data analysis with
 INLABru</h1>
-<h4 class="author">J Matthiopoulos</h4>
+<h4 class="author">J Matthiopoulos (collated from INLABru
+vignettes)</h4>
 <h4 class="date">2022-05-27</h4>
 
 </div>
 
 
-<div id="i.-model-fitting" class="section level1">
-<h1>I. Model fitting</h1>
+<div id="i.-preparation" class="section level1">
+<h1>I. Preparation</h1>
 <div id="i.1.-load-libraries" class="section level2">
 <h2>I.1. Load libraries</h2>
 <pre class="r"><code># Essential
 library(inlabru)
 library(INLA)
+bru_options_set(inla.mode = &quot;experimental&quot;)
+
+# Visualisation
 library(ggplot2)
+library(RColorBrewer)
 
 # Loaded dependencies
 #library(sp)
@@ -1679,16 +1684,79 @@ converted by providing an appropriate spatial projection
 (‘?SpatialPointsDataFrame’).</p>
 <pre class="r"><code>str(gorillas)
 str(gorillas$nests)
-myPoints&lt;-gorillas$nests # assign to shorthand</code></pre>
+myPoints&lt;-gorillas$nests # assign to shorthand
+myCovs &lt;- gorillas$gcov # Covariate data</code></pre>
 <p>If the data set comes with in-built mesh and boundary components,
 then proceed to I.5, otherwise specify the mesh in the next section.</p>
 <pre class="r"><code>str(gorillas$mesh)
 str(gorillas$boundary)
 myMesh&lt;-gorillas$mesh # assign to shorthand
 myBoundary&lt;-gorillas$boundary # assign to shorthand</code></pre>
+<p>Visualise the factor covariate data (<code>vegetation</code>
+type)</p>
+<pre class="r"><code>ggplot() +
+  gg(myCovs$vegetation) +
+  gg(myMesh) +
+  gg(myBoundary) +
+  gg(myPoints, color = &quot;white&quot;, cex = 0.5) +
+  coord_equal()</code></pre>
 </div>
-<div id="i.4.-build-the-mesh" class="section level2">
-<h2>I.4. Build the mesh</h2>
+</div>
+<div id="ii.-glms" class="section level1">
+<h1>II. GLMs</h1>
+<div id="ii.1-a-glm-with-a-factor-covariate-only" class="section level2">
+<h2>II.1 A GLM with a factor covariate only</h2>
+<p>To construct a model with vegetation type as a fixed effect, we need
+to tell ‘lgcp’ how to find the vegetation type at any point in space,
+and we do this by creating model components with a fixed effect that we
+call <code>vegetation</code> (we could call it anything), as
+follows:</p>
+<pre class="r"><code>myFactComp &lt;- coordinates ~ vegetation(myCovs$vegetation, model = &quot;factor_full&quot;) - 1</code></pre>
+<p>Notes:</p>
+<ul>
+<li>We need to tell ‘lgcp’ that this is a factor fixed effect, which we
+do with <code>model=&quot;factor_full&quot;</code>, giving one coefficient for
+each factor level.</li>
+<li>We need to be careful about overparameterisation when using factors.
+Unlike regression models like <code>lm()</code>, <code>glm()</code> or
+<code>gam()</code>, <code>lgcp()</code>, <code>inlabru</code> does not
+automatically remove the first level and absorb it into an intercept.
+Instead, we can either use <code>model=&quot;factor_full&quot;</code> without an
+intercept, or <code>model=&quot;factor_contrast&quot;</code>, which does remove
+the first level.</li>
+</ul>
+<pre class="r"><code>myFactCompAlt &lt;- coordinates ~ vegetation(gcov$vegetation, model = &quot;factor_contrast&quot;) + Intercept(1)</code></pre>
+<p>The model can be fitted as follows</p>
+<pre class="r"><code>myFactorGLM &lt;- lgcp(myFactComp, myPoints, samplers = myBoundary, domain = list(coordinates = myMesh))</code></pre>
+<p>Predict the intensity, and plot the median intensity surface. The
+<code>predidct</code> function of <code>inlabru</code> takes into its
+<code>data</code> argument a <code>SpatialPointsDataFrame</code>, a
+<code>SpatialPixelsDataFrame</code> or a <code>data.frame</code>. We can
+use the <code>inlabru</code> function <code>pixels</code> to generate a
+<code>SpatialPixelsDataFrame</code> only within the boundary, using its
+<code>mask</code> argument, as shown below.</p>
+<pre class="r"><code>df &lt;- pixels(myMesh, mask = myBoundary)
+int1 &lt;- predict(myFactorGLM, data = df, ~ exp(vegetation))
+ggplot() +
+  gg(int1) +
+  gg(myBoundary, alpha = 0, lwd = 2) +
+  gg(myPoints, color = &quot;DarkGreen&quot;) +
+  coord_equal()</code></pre>
+<p>The estimated total abundance of points (but not full posterior) can
+be obtained as follows.The integration <code>weight</code> values (the
+quadrature points) are contained in the <code>ipoints</code> output.</p>
+<pre class="r"><code>ips &lt;- ipoints(myBoundary, myMesh)
+Lambda1 &lt;- predict(myFactorGLM, ips, ~ sum(weight * exp(vegetation)))
+Lambda1</code></pre>
+</div>
+<div id="ii.1-a-glm-with-a-continuous-covariate-only" class="section level2">
+<h2>II.1 A GLM with a continuous covariate only</h2>
+</div>
+</div>
+<div id="iii.-spde-models" class="section level1">
+<h1>III. SPDE models</h1>
+<div id="iii.1.-build-the-spde-mesh" class="section level2">
+<h2>III.1. Build the SPDE mesh</h2>
 <p>—-&gt; HERE ADD MESH-BUILDING PSEUDOCODE</p>
 <p>Plot the points (the nests(. (The <code>ggplot2</code> function
 <code>coord_fixed()</code> sets the aspect ratio, which defaults to
@@ -1700,37 +1768,27 @@ myBoundary&lt;-gorillas$boundary # assign to shorthand</code></pre>
   coord_fixed() +
   ggtitle(&quot;Points&quot;)</code></pre>
 </div>
-<div id="i.5.-specify-spatial-correlation-structure" class="section level2">
-<h2>I.5. Specify spatial correlation structure</h2>
-<p>The following is an example using a Matern correlation structure with
-a PC prior.</p>
+<div id="iii.2.-the-model" class="section level2">
+<h2>III.2. The model</h2>
+<p>First, specify spatial correlation structure. The following is an
+example using a Matern correlation structure with a PC prior.</p>
 <pre class="r"><code>myCorrelation&lt;-inla.spde2.pcmatern(myMesh, prior.range = c(5, 0.01), prior.sigma = c(0.1, 0.01))</code></pre>
-</div>
-<div id="i.6.-define-model" class="section level2">
-<h2>I.6. Define model</h2>
-<p>The model formula requires the explicit name ‘coordinates’ to
-recognise the mesh information that it will receive later, but can use
-the user-defined ‘mySmooth()’ to specify the spatial error term.</p>
+<p>Then, define the model. The model formula requires the explicit name
+‘coordinates’ to recognise the mesh information that it will receive
+later, but can use the user-defined ‘mySmooth()’ to specify the spatial
+error term.</p>
 <pre class="r"><code>myModel&lt;-coordinates~mySmooth(coordinates, model=myCorrelation) + Intercept(1)</code></pre>
-</div>
-<div id="i.7-fit-the-model" class="section level2">
-<h2>I.7 Fit the model</h2>
+<p>The <code>lcgp</code> models is fitted as follows:</p>
 <pre class="r"><code>myFit&lt;-lgcp(myModel, data=myPoints, samplers=myBoundary, domain=list(coordinates=myMesh))</code></pre>
-</div>
-</div>
-<div id="ii.-model-results" class="section level1">
-<h1>II. Model results</h1>
-<div id="ii.1-summary-statistics" class="section level2">
-<h2>II.1 Summary statistics</h2>
+<p>Summary statistics:</p>
 <pre class="r"><code>summary(myFit)</code></pre>
 </div>
-<div id="iii.2-plotting-fixed-effect-parameters" class="section level2">
-<h2>III.2 Plotting fixed effect parameters</h2>
+<div id="iii.3-inference" class="section level2">
+<h2>III.3 Inference</h2>
+<p>Plotting fixed effect parameters</p>
 <pre class="r"><code>plot(myFit, &quot;Intercept&quot;)</code></pre>
-</div>
-<div id="iii.3-plotting-spatial-random-effects" class="section level2">
-<h2>III.3 Plotting spatial random effects</h2>
-<p>Plots of the individual parameters</p>
+<p>Plotting spatial random effects Plots of the individual
+parameters</p>
 <pre class="r"><code>spde.range &lt;- spde.posterior(myFit, &quot;mySmooth&quot;, what = &quot;range&quot;)
 spde.logvar &lt;- spde.posterior(myFit, &quot;mySmooth&quot;, what = &quot;log.variance&quot;)
 range.plot &lt;- plot(spde.range)
@@ -1741,24 +1799,17 @@ multiplot(range.plot, var.plot)</code></pre>
 covplot &lt;- plot(spde.posterior(myFit, &quot;mySmooth&quot;, what = &quot;matern.covariance&quot;))
 multiplot(covplot, corplot)</code></pre>
 </div>
-</div>
-<div id="iii.-model-selection-and-evaluation" class="section level1">
-<h1>III. Model selection and evaluation</h1>
-</div>
-<div id="iv.-model-predictions" class="section level1">
-<h1>IV. Model predictions</h1>
-<div id="iv.1-generate-the-prediction-data-frame" class="section level2">
-<h2>IV.1 Generate the prediction data frame</h2>
-<p>The ‘pixels()’ command generates a regular grid of points which can
-be used for the prediction. This is stored as a spatial data frame in
-the user-defined ‘myPredFrame’.</p>
+<div id="iii.4-model-predictions" class="section level2">
+<h2>III.4 Model predictions</h2>
+<p>First need to generate the prediction data frame. The ‘pixels()’
+command generates a regular grid of points which can be used for the
+prediction. This is stored as a spatial data frame in the user-defined
+‘myPredFrame’.</p>
 <pre class="r"><code>myPredFrame&lt;-pixels(myMesh, nx = 50, ny = 50, mask = FALSE)</code></pre>
 <p>To constrain the predictions to a particular region (e.g. the
 boundary of the mesh), set the mask option in the ‘pixels()’ command to
 ‘mask=myBoundary’.</p>
-</div>
-<div id="iv.2-generate-predictions" class="section level2">
-<h2>IV.2 Generate predictions</h2>
+<p>Now we can generate the predictions.</p>
 <pre class="r"><code>myPreds&lt;-predict(myFit, myPredFrame,~ exp(mySmooth + Intercept))</code></pre>
 <p>Note that multiple functions and linear predictors can be predicted
 simultaneously, under different names.</p>
@@ -1766,9 +1817,7 @@ simultaneously, under different names.</p>
                  ~ data.frame(myLambda = exp(mySmooth + Intercept),
                               myLoglambda = mySmooth + Intercept)
                 )</code></pre>
-</div>
-<div id="iv.3-visualise-the-predictions" class="section level2">
-<h2>IV.3 Visualise the predictions</h2>
+<p>We can visualize multiple aspects of the predictions</p>
 <p>Plotting intensity and log-intensity surfaces</p>
 <pre class="r"><code>pl1 &lt;- ggplot() +
   gg(myPreds$myLambda) +
@@ -1791,8 +1840,8 @@ object <code>myLambda</code>).</p>
   coord_equal() +
   facet_wrap(~property)</code></pre>
 </div>
-<div id="iv.4-estimating-abundance" class="section level2">
-<h2>IV.4 Estimating abundance</h2>
+<div id="iii.5-estimating-abundance" class="section level2">
+<h2>III.5 Estimating abundance</h2>
 <p>Estimating abundance uses the <code>predict</code> function. As a
 first step we need an estimate for the integrated lambda (denoted
 ‘Lambda’ with an upper case L). The integration <code>weight</code>
@@ -1816,10 +1865,7 @@ credible interval).</p>
     )
   )
 )</code></pre>
-</div>
-<div id="iv.5-visualise-posterior-for-abundance" class="section level2">
-<h2>IV.5 Visualise posterior for abundance</h2>
-<p>Get its quantiles via</p>
+<p>Can get the quantiles of the posterior for abundance via</p>
 <pre class="r"><code>inla.qmarginal(c(0.025, 0.5, 0.975), marginal = list(x = Nest$N, y = Nest$mean))</code></pre>
 <p>… the mean via</p>
 <pre class="r"><code>inla.emarginal(identity, marginal = list(x = Nest$N, y = Nest$mean))</code></pre>

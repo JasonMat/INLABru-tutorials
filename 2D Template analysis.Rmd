@@ -77,7 +77,7 @@ ggplot() +
 
 # II. GLMs
 
-# II.1 A GLM with a factor covariate only
+## II.1 A GLM with a factor covariate only
 To construct a model with vegetation type as a fixed effect, we need to tell 'lgcp' how to find the vegetation type at any point in space, and we do this by creating model components with a fixed effect that we call `vegetation` (we could call it anything), as follows:
 
 
@@ -127,9 +127,9 @@ ips <- ipoints(myBoundary, myMesh)
 Lambda1 <- predict(myFactorGLM, ips, ~ sum(weight * exp(vegetation)))
 Lambda1
 ```
+## II.1 A GLM with a continuous covariate only
 
-
-# III. An SPDE model
+# III. SPDE models
 
 ## III.1. Build the SPDE mesh 
 
@@ -147,24 +147,23 @@ ggplot() +
   ggtitle("Points")
 ```
 
-## III.2. Specify spatial correlation structure
-The following is an example using a Matern correlation structure with a PC prior.
+## III.2. The model
+
+First, specify spatial correlation structure. The following is an example using a Matern correlation structure with a PC prior.
 
 ```{r eval=FALSE}
 myCorrelation<-inla.spde2.pcmatern(myMesh, prior.range = c(5, 0.01), prior.sigma = c(0.1, 0.01))
   
 ```
 
-## III.3. Define model
-The model formula requires the explicit name 'coordinates' to recognise the mesh information that it will receive later, but can use the user-defined 'mySmooth()' to specify the spatial error term.  
+Then, define the model. The model formula requires the explicit name 'coordinates' to recognise the mesh information that it will receive later, but can use the user-defined 'mySmooth()' to specify the spatial error term.  
 
 ```{r eval=FALSE}
 
 myModel<-coordinates~mySmooth(coordinates, model=myCorrelation) + Intercept(1)
   
 ```
-
-## III.4 Fit the model
+The `lcgp` models is fitted as follows:
  
 
 ```{r eval=FALSE, warning=FALSE, message=FALSE}
@@ -172,21 +171,21 @@ myModel<-coordinates~mySmooth(coordinates, model=myCorrelation) + Intercept(1)
 myFit<-lgcp(myModel, data=myPoints, samplers=myBoundary, domain=list(coordinates=myMesh))
   
 ```
+Summary statistics:
 
-# II. Model results
-
-## II.1 Summary statistics
 ```{r eval=FALSE,warning=FALSE,message=FALSE}
 summary(myFit)
 ```
 
-## III.2 Plotting fixed effect parameters
+## III.3 Inference 
+
+Plotting fixed effect parameters
 
 ```{r eval=FALSE,warning=FALSE,message=FALSE}
 plot(myFit, "Intercept")
 ```
 
-## III.3 Plotting spatial random effects
+Plotting spatial random effects
 Plots of the individual parameters
 
 ```{r eval=FALSE,warning=FALSE,message=FALSE}
@@ -205,13 +204,9 @@ covplot <- plot(spde.posterior(myFit, "mySmooth", what = "matern.covariance"))
 multiplot(covplot, corplot)
 ```
 
-# III. Model selection and evaluation
+## III.4 Model predictions
 
-
-# IV. Model predictions
-
-## IV.1 Generate the prediction data frame
-The 'pixels()' command generates a regular grid of points which can be used for the prediction. This is stored as a spatial data frame in the user-defined 'myPredFrame'. 
+First need to generate the prediction data frame. The 'pixels()' command generates a regular grid of points which can be used for the prediction. This is stored as a spatial data frame in the user-defined 'myPredFrame'. 
 
 ```{r eval=FALSE, warning=FALSE, message=FALSE}
 
@@ -220,7 +215,7 @@ myPredFrame<-pixels(myMesh, nx = 50, ny = 50, mask = FALSE)
 ```
 To constrain the predictions to a particular region (e.g. the boundary of the mesh), set the mask option in the 'pixels()' command to 'mask=myBoundary'.
 
-## IV.2 Generate predictions
+Now we can generate the predictions.
 
 
 ```{r eval=FALSE, warning=FALSE, message=FALSE}
@@ -238,7 +233,7 @@ myPreds<-predict(myFit, myPredFrame,
   
 ```
 
-## IV.3 Visualise the predictions
+We can visualize multiple aspects of the predictions
 
 Plotting intensity and log-intensity surfaces
 
@@ -268,7 +263,7 @@ ggplot() +
 ```
 
 
-## IV.4 Estimating abundance
+## III.5 Estimating abundance
 
 Estimating abundance uses the `predict` function. As a first step we need an estimate
  for the integrated lambda (denoted 'Lambda' with an upper case L). The integration `weight` values (the quadrature points) are contained in the `ipoints` output. 
@@ -298,8 +293,7 @@ abundance <- predict(
 )
 ```
 
-## IV.5 Visualise posterior for abundance
-Get its quantiles via
+Can get the quantiles of the posterior for abundance via
 
 ```{r eval=FALSE, warning=FALSE,message=FALSE,echo=TRUE}
 inla.qmarginal(c(0.025, 0.5, 0.975), marginal = list(x = Nest$N, y = Nest$mean))
