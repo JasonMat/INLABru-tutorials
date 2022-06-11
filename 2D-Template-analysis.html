@@ -1706,6 +1706,11 @@ type)</p>
 <h1>II. GLMs</h1>
 <div id="ii.1-a-glm-with-a-factor-covariate-only" class="section level2">
 <h2>II.1 A GLM with a factor covariate only</h2>
+<p>—–&gt; Preparation of factor coavariate layer on a mesh is likely to
+be challenging. Most data layers will come in raster form and while the
+projection to a mesh is easy for continuous variables (e.g., pixel_n
+&lt;- raster(spatialpixeldf)), this is not straight forward with
+factors. Of course, in the data above this comes pre-made.</p>
 <p>To construct a model with vegetation type as a fixed effect, we need
 to tell ‘lgcp’ how to find the vegetation type at any point in space,
 and we do this by creating model components with a fixed effect that we
@@ -1725,7 +1730,7 @@ Instead, we can either use <code>model=&quot;factor_full&quot;</code> without an
 intercept, or <code>model=&quot;factor_contrast&quot;</code>, which does remove
 the first level.</li>
 </ul>
-<pre class="r"><code>myFactCompAlt &lt;- coordinates ~ vegetation(gcov$vegetation, model = &quot;factor_contrast&quot;) + Intercept(1)</code></pre>
+<pre class="r"><code>myFactCompAlt &lt;- coordinates ~ vegetation(myCovs$vegetation, model = &quot;factor_contrast&quot;) + Intercept(1)</code></pre>
 <p>The model can be fitted as follows</p>
 <pre class="r"><code>myFactorGLM &lt;- lgcp(myFactComp, myPoints, samplers = myBoundary, domain = list(coordinates = myMesh))</code></pre>
 <p>Predict the intensity, and plot the median intensity surface. The
@@ -1882,10 +1887,61 @@ ggplot(data = abundance) +
 in part III above <code>myCorrelation</code>. The combined model is
 defined as follows. Note the removal of the intercept under the factor
 model ‘factor_full’.</p>
-<pre class="r"><code>mySpdeGlm &lt;- coordinates ~
--1 +
-  vegetation(gcov$vegetation, model = &quot;factor_full&quot;) +
+<pre class="r"><code>mySpdeGlmComp &lt;- coordinates ~
+-1 +vegetation(myCovs$vegetation, model = &quot;factor_full&quot;) +
   mySmooth(coordinates, model = myCorrelation)</code></pre>
+<p>Model is fitted:</p>
+<pre class="r"><code>fitSpdeGlm &lt;- lgcp(mySpdeGlmComp, myPoints, samplers = myBoundary, domain = list(coordinates = myMesh))</code></pre>
+<p>Spatial plot of the fitted (median) intensity surface:</p>
+<pre class="r"><code>df &lt;- pixels(myMesh, mask = myBoundary)
+int2 &lt;- predict(fitSpdeGlm , df, ~ exp(mySmooth + vegetation), n.samples = 1000)
+ggplot() +
+  gg(int2, aes(fill = q0.025)) +
+  gg(myBoundary, alpha = 0, lwd = 2) +
+  gg(myPoints) +
+  coord_equal()</code></pre>
+<p>… and the expected integrated intensity (mean of abundance)</p>
+<pre class="r"><code>Lambda2 &lt;- predict(
+  fitSpdeGlm,
+  ipoints(myBoundary, myMesh),
+  ~ sum(weight * exp(mySmooth + vegetation))
+)
+Lambda2</code></pre>
+<p>To look at the contributions to the linear predictor from the SPDE
+and from vegetation, we can first generate predictions from those
+combined, and individually.</p>
+<pre class="r"><code>lp2 &lt;- predict(fitSpdeGlm, df, ~ list(
+  smooth_veg = mySmooth + vegetation,
+  smooth = mySmooth,
+  veg = vegetation
+))</code></pre>
+<p>The function <code>scale_fill_gradientn</code> sets the scale for the
+plot legend. Here, we set it to span the range of the three linear
+predictor components being plotted (medians are plotted by default).</p>
+<pre class="r"><code>lprange &lt;- range(lp2$smooth_veg$median, lp2$smooth$median, lp2$veg$median)
+csc &lt;- scale_fill_gradientn(colours = brewer.pal(9, &quot;YlOrRd&quot;), limits = lprange)
+plot.lp2 &lt;- ggplot() +
+  gg(lp2$smooth_veg) +
+  csc +
+  theme(legend.position = &quot;bottom&quot;) +
+  gg(myBoundary, alpha = 0) +
+  ggtitle(&quot;mySmooth + vegetation&quot;) +
+  coord_equal()
+plot.lp2.spde &lt;- ggplot() +
+  gg(lp2$smooth) +
+  csc +
+  theme(legend.position = &quot;bottom&quot;) +
+  gg(myBoundary, alpha = 0) +
+  ggtitle(&quot;mySmooth&quot;) +
+  coord_equal()
+plot.lp2.veg &lt;- ggplot() +
+  gg(lp2$veg) +
+  csc +
+  theme(legend.position = &quot;bottom&quot;) +
+  gg(myBoundary, alpha = 0) +
+  ggtitle(&quot;vegetation&quot;) +
+  coord_equal()
+multiplot(plot.lp2, plot.lp2.spde, plot.lp2.veg, cols = 3)</code></pre>
 </div>
 
 

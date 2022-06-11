@@ -78,6 +78,9 @@ ggplot() +
 # II. GLMs
 
 ## II.1 A GLM with a factor covariate only
+
+-----> Preparation of factor coavariate layer on a mesh is likely to be challenging. Most data layers will come in raster form and while the projection to a mesh is easy for continuous variables (e.g., pixel_n <- raster(spatialpixeldf)), this is not straight forward with factors. Of course, in the data above this comes pre-made. 
+
 To construct a model with vegetation type as a fixed effect, we need to tell 'lgcp' how to find the vegetation type at any point in space, and we do this by creating model components with a fixed effect that we call `vegetation` (we could call it anything), as follows:
 
 
