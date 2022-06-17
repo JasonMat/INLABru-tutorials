@@ -3,6 +3,7 @@ title: "Template for 2D data analysis with INLABru"
 author: "J Matthiopoulos (collated from INLABru vignettes)"
 date: '2022-05-27'
 output:
+  pdf_document: default
   html_document:
     df_print: paged
 ---
@@ -11,9 +12,9 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# I. Preparation
+##  I. Preparation
 
-## I.1. Load libraries
+### I.1. Load libraries
 
 ```{r results="hide",warning=FALSE,message=FALSE}
 # Essential
@@ -42,27 +43,27 @@ library(mgcv) # For independent model performance comparisons, used as an exact 
 
 
 ```
-## I.2. Load data
+### I.2. Load data
 In the example below, it is assumed that the data reside in a package, such as 'inlabru'. The 'try' option explores the list of available datasets. The second line loads the particular one. Other ways of importing the data, assuming they are not in a package ('?data') with option 'lib.loc' for pathname. 
 
-```{r eval=FALSE}
+```{r eval=TRUE}
 #try(data(package="inlabru"))
 data(gorillas, package = "inlabru")
 ```
 
-## I.3. Ensure data formatting
+### I.3. Ensure data formatting
 
 The overall structure of the data can be explored by 'str()'. The point locations (here, 'nests') need to be a 'SpatialPointsDataFrame'. If the point data are not in this form then, they will need to be converted by providing an appropriate spatial projection ('?SpatialPointsDataFrame').
 
-```{r eval=FALSE}
+```{r eval=TRUE}
 #str(gorillas)
 #str(gorillas$nests)
 myPoints<-gorillas$nests # assign to shorthand
 myCovs <- gorillas$gcov # Covariate data
 ```
-If the data set comes with in-built mesh and boundary components, then proceed to I.5, otherwise specify the mesh in the next section. 
+Here, the data set comes with in-built mesh and boundary components, but details on mesh specification are in Section III.1. 
 
-```{r eval=FALSE}
+```{r eval=TRUE}
 #str(gorillas$mesh)
 #str(gorillas$boundary)
 myMesh<-gorillas$mesh # assign to shorthand
@@ -70,7 +71,7 @@ myBoundary<-gorillas$boundary # assign to shorthand
 ```
 Visualise the factor covariate data (`vegetation` type)
 
-```{r eval=FALSE, warning=FALSE, message=FALSE}
+```{r eval=TRUE, warning=FALSE, message=FALSE}
 ggplot() +
   gg(myCovs$vegetation) +
   gg(myMesh) +
@@ -81,16 +82,16 @@ ggplot() +
 
 
 
-# II. GLMs
+## II. GLMs
 
-## II.1 A GLM with a factor covariate only
+### II.1 A GLM with a factor covariate only
 
------> Preparation of factor coavariate layer on a mesh is likely to be challenging. Most data layers will come in raster form and while the projection to a mesh is easy for continuous variables (e.g., pixel_n <- raster(spatialpixeldf)), this is not straight forward with factors. Of course, in the data above this comes pre-made. 
+-----> Preparation of a factor covariate layer on a mesh is likely to be challenging. Most data layers will come in raster form and while the projection to a mesh is easy for continuous variables (e.g., `pixel_n <- raster(spatialpixeldf)`), this is not straightforward with factors. Of course, in the data above this comes pre-made. As a result, attempting to run a model using this covariate data together with a custom mesh created below is not going to work. 
 
 To construct a model with vegetation type as a fixed effect, we need to tell 'lgcp' how to find the vegetation type at any point in space, and we do this by creating model components with a fixed effect that we call `vegetation` (we could call it anything), as follows:
 
 
-```{r eval=FALSE, warning=FALSE,message=FALSE}
+```{r eval=TRUE, warning=FALSE,message=FALSE}
 myFactComp <- coordinates ~ vegetation(myCovs$vegetation, model = "factor_full") - 1
 ```
 
@@ -101,25 +102,21 @@ with `model="factor_full"`, giving one coefficient for each factor level.
 * We need to be careful about overparameterisation when using factors.
 Unlike regression models like `lm()`, `glm()` or `gam()`, `lgcp()`,
 `inlabru` does not automatically remove the first level and absorb it into
-an intercept. Instead, we can either use `model="factor_full"` without an intercept,
-or `model="factor_contrast"`, which does remove the first level.
+an intercept. Instead, we can either use `model="factor_full"` without an intercept, or `model="factor_contrast"`, which does remove the first level.
 
-```{r eval=FALSE, warning=FALSE,message=FALSE}
+```{r eval=TRUE, warning=FALSE,message=FALSE}
 myFactCompAlt <- coordinates ~ vegetation(myCovs$vegetation, model = "factor_contrast") + Intercept(1)
 ```
-The model can be fitted as follows
+The model can be fitted as follows:
 
-```{r eval=FALSE, results='hide',warning=FALSE,message=FALSE,eval=FALSE}
+```{r eval=TRUE, results='hide',warning=FALSE,message=FALSE,eval=TRUE}
 myFactorGLM <- lgcp(myFactComp, myPoints, samplers = myBoundary, domain = list(coordinates = myMesh))
 ```
 
-
-Predict the intensity, and plot the median intensity surface. The `predidct` function of `inlabru` takes into its `data` argument a `SpatialPointsDataFrame`, 
-a `SpatialPixelsDataFrame` or a `data.frame`. We can use the `inlabru` function `pixels` to generate
-a `SpatialPixelsDataFrame` only within the boundary, using its `mask` argument, as shown below.
+To predict the intensity, and plot the median intensity surface, the `predidct` function of `inlabru` takes into its `data` argument a `SpatialPointsDataFrame`, a `SpatialPixelsDataFrame` or a `data.frame`. We can use the `inlabru` function `pixels` to generate a `SpatialPixelsDataFrame` only within the boundary, using its `mask` argument, as shown below.
 
 
-```{r eval=FALSE, warning=FALSE,message=FALSE}
+```{r eval=TRUE, warning=FALSE,message=FALSE}
 df <- pixels(myMesh, mask = myBoundary)
 int1 <- predict(myFactorGLM, data = df, ~ exp(vegetation))
 ggplot() +
@@ -131,16 +128,65 @@ ggplot() +
 
 The estimated total abundance of points (but not full posterior) can be obtained as follows.The integration `weight` values (the quadrature points) are contained in the `ipoints` output.
 
-```{r eval=FALSE, warning=FALSE,message=FALSE}
+```{r eval=TRUE, warning=FALSE,message=FALSE}
 ips <- ipoints(myBoundary, myMesh)
 Lambda1 <- predict(myFactorGLM, ips, ~ sum(weight * exp(vegetation)))
 Lambda1
 ```
-## II.1 A GLM with a continuous covariate only
+### II.1 A GLM with a continuous covariate only
+Now lets try a model with elevation as a (continuous) explanatory variable. (First centre elevations for more stable fitting.)
 
-# III. SPDE model, no covariates
+```{r eval=TRUE, message=FALSE, warning=FALSE}
+elev <- myCovs$elevation
+elev$elevation <- elev$elevation - mean(elev$elevation, na.rm = TRUE)
 
-## III.1. Build the SPDE mesh 
+ggplot() +
+  gg(elev) +
+  gg(myBoundary, alpha = 0) +
+  coord_fixed()
+```
+
+The elevation variable here is of class `SpatialGridDataFrame`, that can be handled in the same way as the vegetation covariate. However, since in some cases data may be stored differently, and other methods are needed to access the stored values. In such cases, we can define a function that knows how to evaluate the covariate at arbitrary points in the survey region, and call that function in the component definition. In this case, we can use a powerful method from the ‘sp’ package to do this. We use this to create the needed function.
+
+```{r eval=TRUE, message=FALSE, warning=FALSE}
+f.elev <- function(x, y) {
+  # turn coordinates into SpatialPoints object:
+  # with the appropriate coordinate reference system (CRS)
+  spp <- SpatialPoints(data.frame(x = x, y = y), proj4string = fm_sp_get_crs(elev))
+  proj4string(spp) <- fm_sp_get_crs(elev)
+  # Extract elevation values at spp coords, from our elev SpatialGridDataFrame
+  v <- over(spp, elev)
+  if (any(is.na(v$elevation))) {
+    v$elevation <- inlabru:::bru_fill_missing(elev, spp, v$elevation)
+  }
+  return(v$elevation)
+}
+```
+
+The model is fitted as follows:
+
+```{r eval=TRUE, message=FALSE, warning=FALSE}
+ecomp <- coordinates ~ elev(f.elev(x, y), model = "linear") + Intercept(1)
+myVarGLM<- lgcp(ecomp, myPoints, samplers = myBoundary, domain = list(coordinates = myMesh))
+summary(myVarGLM)
+```
+Predictions are made in same way as with factor variable
+
+```{r eval=TRUE, warning=FALSE,message=FALSE}
+df <- pixels(myMesh, mask = myBoundary)
+int1 <- predict(myVarGLM, data = df, ~ exp(elev))
+ggplot() +
+  gg(int1) +
+  gg(myBoundary, alpha = 0, lwd = 2) +
+  gg(myPoints, color = "DarkGreen") +
+  coord_equal()
+```
+
+
+
+## III. SPDE model, no covariates
+
+### III.1. Build the SPDE mesh 
 For this section I will ignore the fact that the gorillas data set comes with a predefined mesh and develop one from scratch.
 There are several arguments that can be used to build the mesh. The arguments for a two-dimensional mesh construction are the following:
 
@@ -159,14 +205,15 @@ Note that if either (1) the location of points or (3) the domain extent are spec
 
 While there is no general rule for setting a correct value for the `max.edge`, a value for `max.edge` that is too close to the spatial range will make the task of fitting a smooth SPDE difficult. On the other hand, if the `max.edge` value is too small compared to the spatial range, the mesh will have a large number of vertices leading to a more computationally demanding fitting process (which might not necessarily lead to better results). Thus, it is better to begin the analysis with a coarse matrix and evaluate the model on a finer grid as a final step. The `cutoff` option regulates the minimum length of each edge (could have been called "min.edge", more intuitively?).
 
-I first develop the mesh by using the boundary of the study area.
+I first develop the mesh by using the boundary of the study area. (The `ggplot2` function `coord_fixed()` sets the aspect ratio, 
+which defaults to 1.)
 
-```{r eval=FALSE, message=FALSE, warning=FALSE}
+```{r eval=TRUE, message=FALSE, warning=FALSE}
 # Build the mesh
 bbox<-bbox(myBoundary)
 max.edge <- 1/20*sqrt((bbox[1,1]-bbox[1,2])^2+(bbox[2,1]-bbox[2,2])^2)
 
-myMesh <- inla.mesh.2d(boundary = myBoundary,
+myMesh2 <- inla.mesh.2d(boundary = myBoundary,
                     max.edge = max.edge,
                     cutoff=.1)
 
@@ -174,19 +221,22 @@ myMesh <- inla.mesh.2d(boundary = myBoundary,
 
 ggplot() +
      gg(data=myBoundary,color='turquoise',fill='transparent')+  
-  gg(myMesh)
+  gg(myMesh2)+
+  gg(myPoints) +
+  coord_fixed() +
+  ggtitle("Points")
 
 ```
 
 We can also specify an outer layer with a lower triangle density (i.e. where no points occur) to avoid this boundary effect. This can be done by supplying a vector of two values so that the spatial domain is divided into an inner and an outer area. Here, we will define the max.edge such that the outer layer will have a triangle density two times lower than than the inner layer (i.e. twice the length for the outer layer edges).The amount to which the domain should be extended in the inner and outer part can be controlled with the offset argument of the inla.mesh.2d function. For this example we will expand the inner layer by the same amount as the max.edge and the outer layer by the range we assumed when defining the inner max.edge value (i.e. 1/4 of the spatial extent).
 
-```{r eval=FALSE,message=FALSE, warning=FALSE}
+```{r eval=TRUE,message=FALSE, warning=FALSE}
 # Build the mesh
 bbox<-bbox(myBoundary)
 max.edge <- 1/20*sqrt((bbox[1,1]-bbox[1,2])^2+(bbox[2,1]-bbox[2,2])^2)
 bound.outer <- 1/4*sqrt((bbox[1,1]-bbox[1,2])^2+(bbox[2,1]-bbox[2,2])^2)
 
-myMesh <- inla.mesh.2d(boundary = myBoundary,
+myMesh3 <- inla.mesh.2d(boundary = myBoundary,
                     max.edge = c(1,2)*max.edge,
                     cutoff=.1,
                     offset=c(max.edge, bound.outer))
@@ -195,34 +245,48 @@ myMesh <- inla.mesh.2d(boundary = myBoundary,
 
 ggplot() +
      gg(data=myBoundary,color='turquoise',fill='transparent')+  
-  gg(myMesh)
-
-```
-
-Plot the points (the nests(. (The `ggplot2` function `coord_fixed()` sets the aspect ratio, 
-which defaults to 1.)
-
-```{r eval=FALSE, results="hide",warning=FALSE,message=FALSE}
-ggplot() +
-  gg(myMesh) +
+  gg(myMesh3)+
   gg(myPoints) +
-  gg(myBoundary) +
   coord_fixed() +
   ggtitle("Points")
+
+```
+Alternatively, the mesh can be defined by the observation points. 
+
+```{r eval=TRUE,message=FALSE, warning=FALSE}
+# Build the mesh
+bbox<-bbox(myBoundary)
+max.edge <- 1/20*sqrt((bbox[1,1]-bbox[1,2])^2+(bbox[2,1]-bbox[2,2])^2)
+bound.outer <- 1/4*sqrt((bbox[1,1]-bbox[1,2])^2+(bbox[2,1]-bbox[2,2])^2)
+
+myMesh4 <- inla.mesh.2d(loc = myPoints,
+                    max.edge = c(1,2)*max.edge,
+                    cutoff=.1,
+                    offset=c(max.edge, bound.outer))
+#plot(mesh)
+
+ggplot() +
+     gg(data=myBoundary,color='turquoise')+  
+  gg(myMesh4)+
+  gg(myPoints) +
+  coord_fixed() +
+  ggtitle("Points")
+
 ```
 
-## III.2. The model
+
+### III.2. The model
 
 First, specify spatial correlation structure. The following is an example using a Matern correlation structure with a PC prior.
 
-```{r eval=FALSE}
+```{r eval=TRUE}
 myCorrelation<-inla.spde2.pcmatern(myMesh, prior.range = c(5, 0.01), prior.sigma = c(0.1, 0.01))
   
 ```
 
 Then, define the model. The model formula requires the explicit name 'coordinates' to recognise the mesh information that it will receive later, but can use the user-defined 'mySmooth()' to specify the spatial error term.  
 
-```{r eval=FALSE}
+```{r eval=TRUE}
 
 mySpdeComp<-coordinates~mySmooth(coordinates, model=myCorrelation) + Intercept(1)
   
@@ -230,29 +294,29 @@ mySpdeComp<-coordinates~mySmooth(coordinates, model=myCorrelation) + Intercept(1
 The `lcgp` models is fitted as follows:
  
 
-```{r eval=FALSE, warning=FALSE, message=FALSE}
+```{r eval=TRUE, warning=FALSE, message=FALSE}
 
 mySpdeFit<-lgcp(mySpdeComp, data=myPoints, samplers=myBoundary, domain=list(coordinates=myMesh))
   
 ```
 Summary statistics:
 
-```{r eval=FALSE,warning=FALSE,message=FALSE}
+```{r eval=TRUE,warning=FALSE,message=FALSE}
 summary(mySpdeFit)
 ```
 
-## III.3 Inference 
+### III.3 Inference 
 
 Plotting fixed effect parameters
 
-```{r eval=FALSE,warning=FALSE,message=FALSE}
+```{r eval=TRUE,warning=FALSE,message=FALSE}
 plot(mySpdeFit, "Intercept")
 ```
 
 Plotting spatial random effects
 Plots of the individual parameters
 
-```{r eval=FALSE,warning=FALSE,message=FALSE}
+```{r eval=TRUE,warning=FALSE,message=FALSE}
 spde.range <- spde.posterior(mySpdeFit, "mySmooth", what = "range")
 spde.logvar <- spde.posterior(mySpdeFit, "mySmooth", what = "log.variance")
 range.plot <- plot(spde.range)
@@ -262,17 +326,17 @@ multiplot(range.plot, var.plot)
 
 Plots of the correlation and covariance functions
 
-```{r eval=FALSE,warning=FALSE,message=FALSE}
+```{r eval=TRUE,warning=FALSE,message=FALSE}
 corplot <- plot(spde.posterior(mySpdeFit, "mySmooth", what = "matern.correlation"))
 covplot <- plot(spde.posterior(mySpdeFit, "mySmooth", what = "matern.covariance"))
 multiplot(covplot, corplot)
 ```
 
-## III.4 Model predictions
+### III.4 Model predictions
 
 First need to generate the prediction data frame. The 'pixels()' command generates a regular grid of points which can be used for the prediction. This is stored as a spatial data frame in the user-defined 'myPredFrame'. 
 
-```{r eval=FALSE, warning=FALSE, message=FALSE}
+```{r eval=TRUE, warning=FALSE, message=FALSE}
 
 myPredFrame<-pixels(myMesh, nx = 50, ny = 50, mask = FALSE)
   
@@ -282,14 +346,14 @@ To constrain the predictions to a particular region (e.g. the boundary of the me
 Now we can generate the predictions.
 
 
-```{r eval=FALSE, warning=FALSE, message=FALSE}
+```{r eval=TRUE, warning=FALSE, message=FALSE}
 
 myPreds<-predict(mySpdeFit, myPredFrame,~ exp(mySmooth + Intercept))
   
 ```
 Note that multiple functions and linear predictors can be predicted simultaneously, under different names.
 
-```{r eval=FALSE, warning=FALSE, message=FALSE}
+```{r eval=TRUE, warning=FALSE, message=FALSE}
 myPreds<-predict(mySpdeFit, myPredFrame,  
                  ~ data.frame(myLambda = exp(mySmooth + Intercept),
                               myLoglambda = mySmooth + Intercept)
@@ -301,7 +365,7 @@ We can visualize multiple aspects of the predictions
 
 Plotting intensity and log-intensity surfaces
 
-```{r eval=FALSE, warning=FALSE, message=FALSE}
+```{r eval=TRUE, warning=FALSE, message=FALSE}
 pl1 <- ggplot() +
   gg(myPreds$myLambda) +
   gg(myBoundary) +
@@ -317,7 +381,7 @@ multiplot(pl1, pl2, cols = 2)
 
 Alternatively, plotting maps of median, lower 95% and upper 95% density surfaces as follows (assuming that the predicted intensity is in object `myLambda`).
 
-```{r eval=FALSE,warning=FALSE,message=FALSE,fig.width=9,fig.height=4}
+```{r eval=TRUE,warning=FALSE,message=FALSE,fig.width=9,fig.height=4}
 ggplot() +
   gg(cbind(myPreds$myLambda, data.frame(property = "q0.500")), aes(fill = median)) +
   gg(cbind(myPreds$myLambda, data.frame(property = "q0.025")), aes(fill = q0.025)) +
@@ -327,13 +391,13 @@ ggplot() +
 ```
 
 
-## III.5 Estimating abundance
+### III.5 Estimating abundance
 
 Estimating abundance uses the `predict` function. As a first step we need an estimate
  for the integrated lambda (denoted 'Lambda' with an upper case L). The integration `weight` values (the quadrature points) are contained in the `ipoints` output. 
  
 
-```{r eval=FALSE,warning=FALSE,message=FALSE,echo=TRUE}
+```{r eval=TRUE,warning=FALSE,message=FALSE,echo=TRUE}
 Lambda <- predict(
   mySpdeFit,
   ipoints(myBoundary, myMesh),
@@ -345,7 +409,7 @@ Lambda
 
 Use the median and 95%iles of this to determine interval boundaries for estimating the posterior abundance distribution (prediction, not credible interval).
 
-```{r eval=FALSE,warning=FALSE,message=FALSE,echo=TRUE}
+```{r eval=TRUE,warning=FALSE,message=FALSE,echo=TRUE}
 abundance <- predict(
   mySpdeFit, ipoints(myBoundary, myMesh),
   ~ data.frame(
@@ -359,41 +423,41 @@ abundance <- predict(
 
 Can get the quantiles of the posterior for abundance via
 
-```{r eval=FALSE, warning=FALSE,message=FALSE,echo=TRUE}
+```{r eval=TRUE, warning=FALSE,message=FALSE,echo=TRUE}
 inla.qmarginal(c(0.025, 0.5, 0.975), marginal = list(x = abundance$N, y = abundance$mean))
 ```
 ... the mean via
-```{r eval=FALSE, warning=FALSE,message=FALSE,echo=TRUE}
+```{r eval=TRUE, warning=FALSE,message=FALSE,echo=TRUE}
 inla.emarginal(identity, marginal = list(x = abundance$N, y = abundance$mean))
 ```
 and plot posteriors:
-```{r eval=FALSE, results="hide",warning=FALSE,message=FALSE,echo=TRUE}
+```{r eval=TRUE, results="hide",warning=FALSE,message=FALSE,echo=TRUE}
 abundance$plugin_estimate <- dpois(abundance$N, lambda = Lambda$mean)
 ggplot(data = abundance) +
   geom_line(aes(x = N, y = mean, colour = "Posterior")) +
   geom_line(aes(x = N, y = plugin_estimate, colour = "Plugin"))
 ```
 
-# IV. Factor GLM with SPDE spatial term
+## IV. Factor GLM with SPDE spatial term
 This will borrow the same (Matern) correlation structure as defined in part III above `myCorrelation`. The combined model is defined as follows. Note the removal of the intercept under the factor model 'factor_full'. 
 
-```{r eval=FALSE, results='hide',warning=FALSE,message=FALSE}
+```{r eval=TRUE, results='hide',warning=FALSE,message=FALSE}
 mySpdeGlmComp <- coordinates ~
 -1 +vegetation(myCovs$vegetation, model = "factor_full") +
   mySmooth(coordinates, model = myCorrelation)
 ```
 Model is fitted:
 
-```{r eval=FALSE, results='hide',warning=FALSE,message=FALSE,eval=FALSE}
+```{r eval=TRUE, results='hide',warning=FALSE,message=FALSE,eval=TRUE}
 fitSpdeGlm <- lgcp(mySpdeGlmComp, myPoints, samplers = myBoundary, domain = list(coordinates = myMesh))
 ```
 
 Spatial plot of the fitted (median) intensity surface:
-```{r eval=FALSE, warning=FALSE,message=FALSE}
+```{r eval=TRUE, warning=FALSE,message=FALSE}
 df <- pixels(myMesh, mask = myBoundary)
 int2 <- predict(fitSpdeGlm , df, ~ exp(mySmooth + vegetation), n.samples = 1000)
 ggplot() +
-  gg(int2, aes(fill = q0.025)) +
+  gg(int2, aes(fill = median)) +
   gg(myBoundary, alpha = 0, lwd = 2) +
   gg(myPoints) +
   coord_equal()
@@ -401,7 +465,7 @@ ggplot() +
 ... and the expected integrated intensity (mean of abundance)
 
 
-```{r eval=FALSE, warning=FALSE,message=FALSE}
+```{r eval=TRUE, warning=FALSE,message=FALSE}
 Lambda2 <- predict(
   fitSpdeGlm,
   ipoints(myBoundary, myMesh),
@@ -413,7 +477,7 @@ Lambda2
 
 To look at the contributions to the linear predictor from the SPDE and from vegetation, we can first generate predictions from those combined, and individually.
 
-```{r eval=FALSE, warning=FALSE,message=FALSE}
+```{r eval=TRUE, warning=FALSE,message=FALSE}
 lp2 <- predict(fitSpdeGlm, df, ~ list(
   smooth_veg = mySmooth + vegetation,
   smooth = mySmooth,
@@ -424,7 +488,7 @@ lp2 <- predict(fitSpdeGlm, df, ~ list(
 The function `scale_fill_gradientn` sets the scale for the plot legend. Here, we set it to span the range of the three linear predictor components being plotted (medians are plotted by default).
 
 
-```{r eval=FALSE, warning=FALSE,message=FALSE}
+```{r eval=TRUE, warning=FALSE,message=FALSE}
 lprange <- range(lp2$smooth_veg$median, lp2$smooth$median, lp2$veg$median)
 csc <- scale_fill_gradientn(colours = brewer.pal(9, "YlOrRd"), limits = lprange)
 plot.lp2 <- ggplot() +
@@ -449,4 +513,24 @@ plot.lp2.veg <- ggplot() +
   ggtitle("vegetation") +
   coord_equal()
 multiplot(plot.lp2, plot.lp2.spde, plot.lp2.veg, cols = 3)
+```
+
+The uncertainty in this model can be explored via the coefficient of variation plot
+
+```{r eval=TRUE, warning=FALSE,message=FALSE}
+ggplot() +
+  gg(int2, aes(fill = sd / mean)) +
+  gg(myBoundary, alpha = 0) +
+  gg(myPoints) +
+  coord_fixed()
+```
+
+### Model comparisons
+
+NOTE: the behaviour of DIC and WAIC is currently a bit unclear, in particular for experimental mode, and is being investigated./1
+
+```{r eval=TRUE, warning=FALSE,message=FALSE}
+knitr::kable(cbind(
+  deltaIC(myFactorGLM , mySpdeFit, fitSpdeGlm, criterion = c("DIC")),
+  deltaIC(myFactorGLM , mySpdeFit, fitSpdeGlm, criterion = c("WAIC"))))
 ```
