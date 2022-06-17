@@ -1663,7 +1663,13 @@ library(RColorBrewer)
 #library(parallel)
 
 # Optional
-library(mgcv) # For independent model performance comparisons, used as an exact method</code></pre>
+library(mgcv) # For independent model performance comparisons, used as an exact method
+
+
+#library(sf)
+#library(raster)
+#library(rmapshaper)
+#library(tidyr)</code></pre>
 </div>
 <div id="i.2.-load-data" class="section level2">
 <h2>I.2. Load data</h2>
@@ -1672,7 +1678,7 @@ package, such as ‘inlabru’. The ‘try’ option explores the list of
 available datasets. The second line loads the particular one. Other ways
 of importing the data, assuming they are not in a package (‘?data’) with
 option ‘lib.loc’ for pathname.</p>
-<pre class="r"><code>try(data(package=&quot;inlabru&quot;))
+<pre class="r"><code>#try(data(package=&quot;inlabru&quot;))
 data(gorillas, package = &quot;inlabru&quot;)</code></pre>
 </div>
 <div id="i.3.-ensure-data-formatting" class="section level2">
@@ -1682,14 +1688,14 @@ point locations (here, ‘nests’) need to be a ‘SpatialPointsDataFrame’.
 If the point data are not in this form then, they will need to be
 converted by providing an appropriate spatial projection
 (‘?SpatialPointsDataFrame’).</p>
-<pre class="r"><code>str(gorillas)
-str(gorillas$nests)
+<pre class="r"><code>#str(gorillas)
+#str(gorillas$nests)
 myPoints&lt;-gorillas$nests # assign to shorthand
 myCovs &lt;- gorillas$gcov # Covariate data</code></pre>
 <p>If the data set comes with in-built mesh and boundary components,
 then proceed to I.5, otherwise specify the mesh in the next section.</p>
-<pre class="r"><code>str(gorillas$mesh)
-str(gorillas$boundary)
+<pre class="r"><code>#str(gorillas$mesh)
+#str(gorillas$boundary)
 myMesh&lt;-gorillas$mesh # assign to shorthand
 myBoundary&lt;-gorillas$boundary # assign to shorthand</code></pre>
 <p>Visualise the factor covariate data (<code>vegetation</code>
@@ -1762,7 +1768,95 @@ Lambda1</code></pre>
 <h1>III. SPDE model, no covariates</h1>
 <div id="iii.1.-build-the-spde-mesh" class="section level2">
 <h2>III.1. Build the SPDE mesh</h2>
-<p>—-&gt; HERE ADD MESH-BUILDING PSEUDOCODE</p>
+<p>For this section I will ignore the fact that the gorillas data set
+comes with a predefined mesh and develop one from scratch. There are
+several arguments that can be used to build the mesh. The arguments for
+a two-dimensional mesh construction are the following:</p>
+<pre class="r"><code>args(inla.mesh.2d)</code></pre>
+<pre><code>## function (loc = NULL, loc.domain = NULL, offset = NULL, n = NULL, 
+##     boundary = NULL, interior = NULL, max.edge = NULL, min.angle = NULL, 
+##     cutoff = 1e-12, max.n.strict = NULL, max.n = NULL, plot.delay = NULL, 
+##     crs = NULL) 
+## NULL</code></pre>
+<p>First, some reference about the study region is needed, which can be
+provided by either:</p>
+<ol style="list-style-type: decimal">
+<li>The location of points, supplied on the <code>loc</code> argument <a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>.</li>
+<li>A boundary of the region defined by a set of polygons (e.g., a
+polygon defining the coastline of the study) supplied on the
+<code>boundary</code> argument.</li>
+<li>The domain extent which can be supplied as a single polygon on the
+<code>loc.domain</code> argument.</li>
+</ol>
+<p>Note that if either (1) the location of points or (3) the domain
+extent are specified, the mesh will be constructed based on a convex
+hull (a polygon of triangles out of the domain area). Alternatively, it
+is possible to include a non-convex hull as a boundary in the mesh
+construction instead of the <code>loc</code> or <code>loc.domain</code>
+arguments. This will result in the triangulation to be constrained by
+the boundary. A non-convex hull mesh can also be created by building a
+boundary for the points using the <code>inla.nonconvex.hull()</code>
+function. Finally, the other compulsory argument that needs to be
+specified is <code>max.edge</code> which determines the largest allowed
+triangle length (the lower the value for max.edge the higher the
+resolution). The value supplied to this argument can be either a scalar,
+in which case the value controls the triangle edge lengths in the inner
+domain, or a length two vector that controls the edge lengths in the
+inner domain and in the outer extension respectively. Notice that The
+value (or values) passed to the <code>max.edge</code> option must be on
+the same scale unit as the coordinates.</p>
+<p>While there is no general rule for setting a correct value for the
+<code>max.edge</code>, a value for <code>max.edge</code> that is too
+close to the spatial range will make the task of fitting a smooth SPDE
+difficult. On the other hand, if the <code>max.edge</code> value is too
+small compared to the spatial range, the mesh will have a large number
+of vertices leading to a more computationally demanding fitting process
+(which might not necessarily lead to better results). Thus, it is better
+to begin the analysis with a coarse matrix and evaluate the model on a
+finer grid as a final step. The <code>cutoff</code> option regulates the
+minimum length of each edge (could have been called “min.edge”, more
+intuitively?).</p>
+<p>I first develop the mesh by using the boundary of the study area.</p>
+<pre class="r"><code># Build the mesh
+bbox&lt;-bbox(myBoundary)
+max.edge &lt;- 1/20*sqrt((bbox[1,1]-bbox[1,2])^2+(bbox[2,1]-bbox[2,2])^2)
+
+myMesh &lt;- inla.mesh.2d(boundary = myBoundary,
+                    max.edge = max.edge,
+                    cutoff=.1)
+
+#plot(mesh)
+
+ggplot() +
+     gg(data=myBoundary,color=&#39;turquoise&#39;,fill=&#39;transparent&#39;)+  
+  gg(myMesh)</code></pre>
+<p>We can also specify an outer layer with a lower triangle density
+(i.e. where no points occur) to avoid this boundary effect. This can be
+done by supplying a vector of two values so that the spatial domain is
+divided into an inner and an outer area. Here, we will define the
+max.edge such that the outer layer will have a triangle density two
+times lower than than the inner layer (i.e. twice the length for the
+outer layer edges).The amount to which the domain should be extended in
+the inner and outer part can be controlled with the offset argument of
+the inla.mesh.2d function. For this example we will expand the inner
+layer by the same amount as the max.edge and the outer layer by the
+range we assumed when defining the inner max.edge value (i.e. 1/4 of the
+spatial extent).</p>
+<pre class="r"><code># Build the mesh
+bbox&lt;-bbox(myBoundary)
+max.edge &lt;- 1/20*sqrt((bbox[1,1]-bbox[1,2])^2+(bbox[2,1]-bbox[2,2])^2)
+bound.outer &lt;- 1/4*sqrt((bbox[1,1]-bbox[1,2])^2+(bbox[2,1]-bbox[2,2])^2)
+
+myMesh &lt;- inla.mesh.2d(boundary = myBoundary,
+                    max.edge = c(1,2)*max.edge,
+                    cutoff=.1,
+                    offset=c(max.edge, bound.outer))
+
+#plot(mesh)
+
+ggplot() +
+     gg(data=myBoundary,color=&#39;turquoise&#39;,fill=&#39;transparent&#39;)+  
+  gg(myMesh)</code></pre>
 <p>Plot the points (the nests(. (The <code>ggplot2</code> function
 <code>coord_fixed()</code> sets the aspect ratio, which defaults to
 1.)</p>
@@ -1942,6 +2036,14 @@ plot.lp2.veg &lt;- ggplot() +
   ggtitle(&quot;vegetation&quot;) +
   coord_equal()
 multiplot(plot.lp2, plot.lp2.spde, plot.lp2.veg, cols = 3)</code></pre>
+</div>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>Matrix of point locations to be used as initial
+triangulation nodes. Can alternatively be a <code>SpatialPoints</code>
+or <code>SpatialPointsDataFrame</code> object.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+</ol>
 </div>
 
 

@@ -35,12 +35,18 @@ library(RColorBrewer)
 library(mgcv) # For independent model performance comparisons, used as an exact method
 
 
+#library(sf)
+#library(raster)
+#library(rmapshaper)
+#library(tidyr)
+
+
 ```
 ## I.2. Load data
 In the example below, it is assumed that the data reside in a package, such as 'inlabru'. The 'try' option explores the list of available datasets. The second line loads the particular one. Other ways of importing the data, assuming they are not in a package ('?data') with option 'lib.loc' for pathname. 
 
 ```{r eval=FALSE}
-try(data(package="inlabru"))
+#try(data(package="inlabru"))
 data(gorillas, package = "inlabru")
 ```
 
@@ -49,16 +55,16 @@ data(gorillas, package = "inlabru")
 The overall structure of the data can be explored by 'str()'. The point locations (here, 'nests') need to be a 'SpatialPointsDataFrame'. If the point data are not in this form then, they will need to be converted by providing an appropriate spatial projection ('?SpatialPointsDataFrame').
 
 ```{r eval=FALSE}
-str(gorillas)
-str(gorillas$nests)
+#str(gorillas)
+#str(gorillas$nests)
 myPoints<-gorillas$nests # assign to shorthand
 myCovs <- gorillas$gcov # Covariate data
 ```
 If the data set comes with in-built mesh and boundary components, then proceed to I.5, otherwise specify the mesh in the next section. 
 
 ```{r eval=FALSE}
-str(gorillas$mesh)
-str(gorillas$boundary)
+#str(gorillas$mesh)
+#str(gorillas$boundary)
 myMesh<-gorillas$mesh # assign to shorthand
 myBoundary<-gorillas$boundary # assign to shorthand
 ```
@@ -135,8 +141,63 @@ Lambda1
 # III. SPDE model, no covariates
 
 ## III.1. Build the SPDE mesh 
+For this section I will ignore the fact that the gorillas data set comes with a predefined mesh and develop one from scratch.
+There are several arguments that can be used to build the mesh. The arguments for a two-dimensional mesh construction are the following:
 
-----> HERE ADD MESH-BUILDING PSEUDOCODE
+```{r message=FALSE, warning=FALSE}
+args(inla.mesh.2d)
+```
+
+First, some reference about the study region is needed, which can be provided by either:
+
+1. The location of points, supplied on the `loc` argument ^[Matrix of point locations to be used as initial triangulation nodes. Can alternatively be a `SpatialPoints` or `SpatialPointsDataFrame` object.].
+2.  A boundary of the region defined by a set of polygons (e.g., a polygon defining the coastline of the study) supplied on the `boundary` argument.
+3.  The domain extent which can be supplied as a single polygon on the `loc.domain` argument.
+
+
+Note that if either (1) the location of points or (3) the domain extent are specified, the mesh will be constructed based on a convex hull (a polygon of triangles out of the domain area). Alternatively, it is possible to include a non-convex hull as a boundary in the mesh construction instead of the `loc` or `loc.domain` arguments. This will result in the triangulation to be constrained by the boundary. A non-convex hull mesh can also be created by building a boundary for the points using the `inla.nonconvex.hull()` function. Finally, the other compulsory argument that needs to be specified is `max.edge` which determines the largest allowed triangle length (the lower the value for max.edge the higher the resolution). The value supplied to this argument can be either a scalar, in which case the value controls the triangle edge lengths in the inner domain, or a length two vector that controls the edge lengths in the inner domain and in the outer extension respectively. Notice that The value (or values) passed to the `max.edge` option must be on the same scale unit as the coordinates. 
+
+While there is no general rule for setting a correct value for the `max.edge`, a value for `max.edge` that is too close to the spatial range will make the task of fitting a smooth SPDE difficult. On the other hand, if the `max.edge` value is too small compared to the spatial range, the mesh will have a large number of vertices leading to a more computationally demanding fitting process (which might not necessarily lead to better results). Thus, it is better to begin the analysis with a coarse matrix and evaluate the model on a finer grid as a final step. The `cutoff` option regulates the minimum length of each edge (could have been called "min.edge", more intuitively?).
+
+I first develop the mesh by using the boundary of the study area.
+
+```{r eval=FALSE, message=FALSE, warning=FALSE}
+# Build the mesh
+bbox<-bbox(myBoundary)
+max.edge <- 1/20*sqrt((bbox[1,1]-bbox[1,2])^2+(bbox[2,1]-bbox[2,2])^2)
+
+myMesh <- inla.mesh.2d(boundary = myBoundary,
+                    max.edge = max.edge,
+                    cutoff=.1)
+
+#plot(mesh)
+
+ggplot() +
+     gg(data=myBoundary,color='turquoise',fill='transparent')+  
+  gg(myMesh)
+
+```
+
+We can also specify an outer layer with a lower triangle density (i.e. where no points occur) to avoid this boundary effect. This can be done by supplying a vector of two values so that the spatial domain is divided into an inner and an outer area. Here, we will define the max.edge such that the outer layer will have a triangle density two times lower than than the inner layer (i.e. twice the length for the outer layer edges).The amount to which the domain should be extended in the inner and outer part can be controlled with the offset argument of the inla.mesh.2d function. For this example we will expand the inner layer by the same amount as the max.edge and the outer layer by the range we assumed when defining the inner max.edge value (i.e. 1/4 of the spatial extent).
+
+```{r eval=FALSE,message=FALSE, warning=FALSE}
+# Build the mesh
+bbox<-bbox(myBoundary)
+max.edge <- 1/20*sqrt((bbox[1,1]-bbox[1,2])^2+(bbox[2,1]-bbox[2,2])^2)
+bound.outer <- 1/4*sqrt((bbox[1,1]-bbox[1,2])^2+(bbox[2,1]-bbox[2,2])^2)
+
+myMesh <- inla.mesh.2d(boundary = myBoundary,
+                    max.edge = c(1,2)*max.edge,
+                    cutoff=.1,
+                    offset=c(max.edge, bound.outer))
+
+#plot(mesh)
+
+ggplot() +
+     gg(data=myBoundary,color='turquoise',fill='transparent')+  
+  gg(myMesh)
+
+```
 
 Plot the points (the nests(. (The `ggplot2` function `coord_fixed()` sets the aspect ratio, 
 which defaults to 1.)
