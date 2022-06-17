@@ -1,0 +1,167 @@
+---
+title: "Geographic operations and meshes"
+author: "J Matthiopoulos"
+date: '2022-06-16'
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+## Setting up
+The libraries needed
+
+```{r message=FALSE, warning=FALSE, paged.print=TRUE}
+library(sf)
+library(raster)
+library(rmapshaper)
+library(tidyr)
+library(ggplot2)
+library(inlabru)
+library(INLA)
+library(sp)
+
+```
+
+## Importing the data
+The necessary geographic data are in package `raster`. The `getData` command fetches geographic data for anywhere in the world. Data are read from files that are first downloaded if necessary. The data names are as follows:
+
+- `alt`: Altitude (elevation); the data were aggregated from SRTM 90 m resolution data between -60 and 60 latitude. 
+- `GADM`: A database of global administrative boundaries. 
+- `worldclim`: A database of global interpolated climate data. 
+- `SRTM`: The hole-filled CGIAR-SRTM digital elevation (90 m resolution).
+- `countries`: Polygons for all countries at a higher resolution than the `wrld_simpl` data in the maptools package.
+
+Note that the `terra` package, that is compatible with the new changes in GDAL and PROJ, has now been created as a replacement for the raster library. I will need to explore equivalent ways of obtaining these data via `terra`. 
+
+```{r message=FALSE, warning=FALSE, paged.print=TRUE}
+
+uk_mask <- getData('GADM', country='GBR', level=1) 
+uk_alt <- getData("alt", country='GBR', mask=TRUE)
+England <- uk_mask[uk_mask$NAME_1 == "England",]
+class(England)
+class(uk_alt)
+```
+
+Any shape file in my system can be read directly using the `st_read()` (an `sf` command for reading simple features from files or databases, or retrieving layer names and their geometry type(s)). In this example, the England SpatialPolygonsDataFrame will be converted to a simple feature object that we can manipulate and visualize within the tidyverse DSLs. The CRS for spatial objects of class `sf` or `stars` can be retrieved using the `st_crs` function, or be set or changed via `st_set_crs` using pipeline command (notice that simply replacing the CRS does not re-project the data, we should use `st_transform` for this).
+
+In the code below `st_transform()` (Equivalent to `spTransform()`) is used to project the original CRS using the EPSG code for the BNG and change the units from meters to km by accessing the PROJ.4 string attribute.
+
+```{r message=FALSE, warning=FALSE, paged.print=TRUE}
+# build an sf object
+England_sf = st_as_sf(England) %>%  st_transform(crs = 27700)
+England_sf = st_transform(England_sf, gsub("units=m","units=km",st_crs(England_sf)$proj4string)) 
+```
+
+For simplicity, remove all of the smaller detached islands by using the `ms_filter_islands` function in the `rmapshaper` package ^[This package fully supports sf or sfc polygons object as well. It is used to edit and simplify `geojson`, `Spatial`, and `sf` objects. Performs topologically-aware polygon simplification, as well as other operations such as clipping, erasing, dissolving, and converting 'multi-part' to 'single-part' geometries. It relies on the `geojsonio` package for working with `geojson` objects, the `sf` package for working with `sf` objects, and the `sp` and `rgdal` packages for working with `Spatial` objects.]
+
+```{r message=FALSE, warning=FALSE, paged.print=TRUE}
+# Remove detached polygons with an area less than 2000 km
+England_mainland <- ms_filter_islands(England_sf, min_area = 2000)
+England_mainland
+
+#Plot the resulting simple feature object using geom_sf within ggplot.
+ggplot()+
+  geom_sf(data=England_mainland)
+
+```
+
+
+We can query information on the CRS and projection as follows:
+
+```{r message=FALSE, warning=FALSE}
+#  retrieve the PROJ.4 attribute
+st_crs(England_mainland)$proj4string
+
+# check whether  longitude-latitude projection is still being applied
+st_is_longlat(England_mainland)
+
+# Check the spatial units of our projection
+st_crs(England_mainland)$units
+
+```
+
+## Two-dimensional mesh for spatial problems
+
+There are several arguments that can be used to build the mesh. This vignette will only cover a two-dimensional mesh construction using the inla.mesh.2d. function. However, a one-dimensional mesh specification can be created using the inla.mesh.1d function . The arguments for a two-dimensional mesh construction are the following:
+
+```{r message=FALSE, warning=FALSE}
+args(inla.mesh.2d)
+```
+
+First, some reference about the study region is needed, which can be provided by either:
+
+- The location of points, supplied on the `loc` argument ^[Matrix of point locations to be used as initial triangulation nodes. Can alternatively be a `SpatialPoints` or `SpatialPointsDataFrame` object.].
+- The domain extent which can be supplied as a single polygon on the `loc.domain` argument.
+- A boundary of the region defined by a set of polygons (e.g., a polygon defining the coastline of the study) supplied on the `boundary` argument.
+
+Note that if either (1) the location of points or (2) the domain extent are specified, the mesh will be constructed based on a convex hull (a polygon of triangles out of the domain area). Alternatively, it possible to include a non-convex hull as a boundary in the mesh construction instead of the `loc` or `loc.domain` arguments. This will result in the triangulation to be constrained by the boundary. A non-convex hull mesh can also be created by building a boundary for the points using the `inla.nonconvex.hull()` function. Finally, the other compulsory argument that needs to be specified is `max.edge` which determines the largest allowed triangle length (the lower the value for max.edge the higher the resolution). The value supplied to this argument can be either a scalar, in which case the value controls the triangle edge lengths in the inner domain, or a length two vector that controls the edge lengths in the inner domain and in the outer extension respectively. Notice that The value (or values) passed to the `max.edge` option must be on the same scale unit as the coordinates. 
+
+While there is no general rule for setting a correct value for the `max.edge`, a value for `max.edge` that is too close to the spatial range will make the task of fitting a smooth SPDE difficult. On the other hand, if the `max.edge` value is too small compared to the spatial range, the mesh will have a large number of vertices leading to a more computationally demanding fitting process (which might not necessarily lead to better results). Thus, it is better to begin the analysis with a coarse matrix and evaluate the model on a finer grid as a final step. The `cutoff` option regulates the minimum length of each edge (could have been called "min.edge", more intuitively?).
+
+The final step is to transform sf-class objects to a sp spatial-structure. The we can use this object to produce the mesh and fit our model.
+
+```{r message=FALSE, warning=FALSE}
+# Build the mesh
+bbox<-st_bbox(England_mainland)
+max.edge = 1/20*sqrt((bbox[1]-bbox[3])^2+(bbox[2]-bbox[4])^2)
+England_mainland_sp <- as(England_mainland, "Spatial")
+
+england.bdry <- England_mainland_sp %>% inla.sp2segment()
+
+
+mesh = inla.mesh.2d(boundary = england.bdry,
+                    max.edge = max.edge,
+                    cutoff=5)
+
+#plot(mesh)
+
+ggplot() +
+     geom_sf(data=England_mainland,color='turquoise',fill='transparent')+  
+  gg(mesh)
+
+```
+
+
+The problem with this mesh is that there is a rather large number of points too close to the boundary. This can cause a boundary effect in which the variance is larger at the border than within the domain. Thus, we can also specify an outer layer with a lower triangle density (i.e. where no points occur) to avoid this boundary effect. This can be done by supplying a vector of two values so that the spatial domain is divided into an inner and an outer area. Here, we will define the max.edge such that the outer layer will have a triangle density two times lower than than the inner layer (i.e. twice the length for the outer layer edges).
+
+```{r message=FALSE, warning=FALSE}
+mesh = inla.mesh.2d(boundary = england.bdry, 
+                    crs = st_crs(England_mainland),
+                    max.edge = c(1,2)*max.edge,
+                    cutoff=5)
+
+#plot(mesh)
+
+ggplot() +
+     geom_sf(data=England_mainland,color='turquoise',fill='transparent')+  
+  gg(mesh)
+
+```
+
+By doing this, we avoid boundary effects by extending the original spatial domain without increasing the computational costs too much. If we had defined the same triangle density in both inner and outer layers, then we would have been wasting too much computational effort to get precise approximations in the outer extension where no actual points occur. Lindgren and Rue (2015), suggest for the domain to be extended by a distance at least equal to the range to avoid the boundary effect. The amount in which the domain should be extended in the inner and outer part can be controlled with the offset argument of the inla.mesh.2d function. For this example we will expand the inner layer by the same amount as the max.edge and the outer layer by the range we assumed when defining the inner max.edge value (i.e. 1/3 of the spatial extent).
+
+```{r message=FALSE, warning=FALSE}
+
+
+bound.outer <- 1/3*sqrt((bbox[1]-bbox[3])^2+(bbox[2]-bbox[4])^2)
+mesh <- inla.mesh.2d(boundary = england.bdry,
+                    max.edge = c(1,2)*max.edge,
+                    cutoff=5,
+                    offset=c(max.edge, bound.outer)
+                    )
+
+#plot(mesh)
+
+ggplot() +
+     geom_sf(data=England_mainland,color='turquoise',fill='transparent')+  
+  gg(mesh)
+
+```
+
+
+Righettoa et al (2018) investigated the impact of different mesh specifications on parameter estimation and prediction through a simulation study. From the different arguments used to build a mesh they found that the cutoff and maximal edge length in the inner domain (conditional on the cutoff) had the largest impact on the results compared to the maximal edge length in the outer domain which had little effect on this.
