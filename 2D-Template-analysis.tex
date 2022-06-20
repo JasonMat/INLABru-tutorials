@@ -1,0 +1,1010 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Template for 2D data analysis with INLABru},
+  pdfauthor={J Matthiopoulos (collated from INLABru vignettes)},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{Template for 2D data analysis with INLABru}
+\author{J Matthiopoulos (collated from INLABru vignettes)}
+\date{2022-05-27}
+
+\begin{document}
+\maketitle
+
+\hypertarget{i.-preparation}{%
+\subsection{I. Preparation}\label{i.-preparation}}
+
+\hypertarget{i.1.-load-libraries}{%
+\subsubsection{I.1. Load libraries}\label{i.1.-load-libraries}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Essential}
+\FunctionTok{library}\NormalTok{(inlabru)}
+\FunctionTok{library}\NormalTok{(INLA)}
+\FunctionTok{bru\_options\_set}\NormalTok{(}\AttributeTok{inla.mode =} \StringTok{"experimental"}\NormalTok{)}
+
+\CommentTok{\# Visualisation}
+\FunctionTok{library}\NormalTok{(ggplot2)}
+\FunctionTok{library}\NormalTok{(RColorBrewer)}
+
+\CommentTok{\# Loaded dependencies}
+\CommentTok{\#library(sp)}
+\CommentTok{\#library(Matrix)}
+\CommentTok{\#library(foreach)}
+\CommentTok{\#library(parallel)}
+
+\CommentTok{\# Optional}
+\FunctionTok{library}\NormalTok{(mgcv) }\CommentTok{\# For independent model performance comparisons, used as an exact method}
+
+
+\CommentTok{\#library(sf)}
+\CommentTok{\#library(raster)}
+\CommentTok{\#library(rmapshaper)}
+\CommentTok{\#library(tidyr)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{i.2.-load-data}{%
+\subsubsection{I.2. Load data}\label{i.2.-load-data}}
+
+In the example below, it is assumed that the data reside in a package,
+such as `inlabru'. The `try' option explores the list of available
+datasets. The second line loads the particular one. Other ways of
+importing the data, assuming they are not in a package (`?data') with
+option `lib.loc' for pathname.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#try(data(package="inlabru"))}
+\FunctionTok{data}\NormalTok{(gorillas, }\AttributeTok{package =} \StringTok{"inlabru"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{i.3.-ensure-data-formatting}{%
+\subsubsection{I.3. Ensure data
+formatting}\label{i.3.-ensure-data-formatting}}
+
+The overall structure of the data can be explored by `str()'. The point
+locations (here, `nests') need to be a `SpatialPointsDataFrame'. If the
+point data are not in this form then, they will need to be converted by
+providing an appropriate spatial projection (`?SpatialPointsDataFrame').
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#str(gorillas)}
+\CommentTok{\#str(gorillas$nests)}
+\NormalTok{myPoints}\OtherTok{\textless{}{-}}\NormalTok{gorillas}\SpecialCharTok{$}\NormalTok{nests }\CommentTok{\# assign to shorthand}
+\NormalTok{myCovs }\OtherTok{\textless{}{-}}\NormalTok{ gorillas}\SpecialCharTok{$}\NormalTok{gcov }\CommentTok{\# Covariate data}
+\end{Highlighting}
+\end{Shaded}
+
+Here, the data set comes with in-built mesh and boundary components, but
+details on mesh specification are in Section III.1.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#str(gorillas$mesh)}
+\CommentTok{\#str(gorillas$boundary)}
+\NormalTok{myMesh}\OtherTok{\textless{}{-}}\NormalTok{gorillas}\SpecialCharTok{$}\NormalTok{mesh }\CommentTok{\# assign to shorthand}
+\NormalTok{myBoundary}\OtherTok{\textless{}{-}}\NormalTok{gorillas}\SpecialCharTok{$}\NormalTok{boundary }\CommentTok{\# assign to shorthand}
+\end{Highlighting}
+\end{Shaded}
+
+Visualise the factor covariate data (\texttt{vegetation} type)
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myCovs}\SpecialCharTok{$}\NormalTok{vegetation) }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myMesh) }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myBoundary) }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myPoints, }\AttributeTok{color =} \StringTok{"white"}\NormalTok{, }\AttributeTok{cex =} \FloatTok{0.5}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{coord\_equal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{2D-Template-analysis_files/figure-latex/unnamed-chunk-5-1.pdf}
+
+\hypertarget{ii.-glms}{%
+\subsection{II. GLMs}\label{ii.-glms}}
+
+\hypertarget{ii.1-a-glm-with-a-factor-covariate-only}{%
+\subsubsection{II.1 A GLM with a factor covariate
+only}\label{ii.1-a-glm-with-a-factor-covariate-only}}
+
+-----\textgreater{} Preparation of a factor covariate layer on a mesh is
+likely to be challenging. Most data layers will come in raster form and
+while the projection to a mesh is easy for continuous variables (e.g.,
+\texttt{pixel\_n\ \textless{}-\ raster(spatialpixeldf)}), this is not
+straightforward with factors. Of course, in the data above this comes
+pre-made. As a result, attempting to run a model using this covariate
+data together with a custom mesh created below is not going to work.
+
+To construct a model with vegetation type as a fixed effect, we need to
+tell `lgcp' how to find the vegetation type at any point in space, and
+we do this by creating model components with a fixed effect that we call
+\texttt{vegetation} (we could call it anything), as follows:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{myFactComp }\OtherTok{\textless{}{-}}\NormalTok{ coordinates }\SpecialCharTok{\textasciitilde{}} \FunctionTok{vegetation}\NormalTok{(myCovs}\SpecialCharTok{$}\NormalTok{vegetation, }\AttributeTok{model =} \StringTok{"factor\_full"}\NormalTok{) }\SpecialCharTok{{-}} \DecValTok{1}
+\end{Highlighting}
+\end{Shaded}
+
+Notes:
+
+\begin{itemize}
+\tightlist
+\item
+  We need to tell `lgcp' that this is a factor fixed effect, which we do
+  with \texttt{model="factor\_full"}, giving one coefficient for each
+  factor level.
+\item
+  We need to be careful about overparameterisation when using factors.
+  Unlike regression models like \texttt{lm()}, \texttt{glm()} or
+  \texttt{gam()}, \texttt{lgcp()}, \texttt{inlabru} does not
+  automatically remove the first level and absorb it into an intercept.
+  Instead, we can either use \texttt{model="factor\_full"} without an
+  intercept, or \texttt{model="factor\_contrast"}, which does remove the
+  first level.
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{myFactCompAlt }\OtherTok{\textless{}{-}}\NormalTok{ coordinates }\SpecialCharTok{\textasciitilde{}} \FunctionTok{vegetation}\NormalTok{(myCovs}\SpecialCharTok{$}\NormalTok{vegetation, }\AttributeTok{model =} \StringTok{"factor\_contrast"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{Intercept}\NormalTok{(}\DecValTok{1}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+The model can be fitted as follows:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{myFactorGLM }\OtherTok{\textless{}{-}} \FunctionTok{lgcp}\NormalTok{(myFactComp, myPoints, }\AttributeTok{samplers =}\NormalTok{ myBoundary, }\AttributeTok{domain =} \FunctionTok{list}\NormalTok{(}\AttributeTok{coordinates =}\NormalTok{ myMesh))}
+\end{Highlighting}
+\end{Shaded}
+
+To predict the intensity, and plot the median intensity surface, the
+\texttt{predidct} function of \texttt{inlabru} takes into its
+\texttt{data} argument a \texttt{SpatialPointsDataFrame}, a
+\texttt{SpatialPixelsDataFrame} or a \texttt{data.frame}. We can use the
+\texttt{inlabru} function \texttt{pixels} to generate a
+\texttt{SpatialPixelsDataFrame} only within the boundary, using its
+\texttt{mask} argument, as shown below.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df }\OtherTok{\textless{}{-}} \FunctionTok{pixels}\NormalTok{(myMesh, }\AttributeTok{mask =}\NormalTok{ myBoundary)}
+\NormalTok{int1 }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(myFactorGLM, }\AttributeTok{data =}\NormalTok{ df, }\SpecialCharTok{\textasciitilde{}} \FunctionTok{exp}\NormalTok{(vegetation))}
+\FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(int1) }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myBoundary, }\AttributeTok{alpha =} \DecValTok{0}\NormalTok{, }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myPoints, }\AttributeTok{color =} \StringTok{"DarkGreen"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{coord\_equal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{2D-Template-analysis_files/figure-latex/unnamed-chunk-9-1.pdf}
+
+The estimated total abundance of points (but not full posterior) can be
+obtained as follows.The integration \texttt{weight} values (the
+quadrature points) are contained in the \texttt{ipoints} output.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{ips }\OtherTok{\textless{}{-}} \FunctionTok{ipoints}\NormalTok{(myBoundary, myMesh)}
+\NormalTok{Lambda1 }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(myFactorGLM, ips, }\SpecialCharTok{\textasciitilde{}} \FunctionTok{sum}\NormalTok{(weight }\SpecialCharTok{*} \FunctionTok{exp}\NormalTok{(vegetation)))}
+\NormalTok{Lambda1}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##       mean       sd   q0.025   median   q0.975     smin     smax         cv
+## 1 644.1787 24.60183 594.7933 643.8525 697.7191 579.3538 707.1418 0.03819101
+##        var
+## 1 605.2502
+\end{verbatim}
+
+\hypertarget{ii.1-a-glm-with-a-continuous-covariate-only}{%
+\subsubsection{II.1 A GLM with a continuous covariate
+only}\label{ii.1-a-glm-with-a-continuous-covariate-only}}
+
+Now lets try a model with elevation as a (continuous) explanatory
+variable. (First centre elevations for more stable fitting.)
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{elev }\OtherTok{\textless{}{-}}\NormalTok{ myCovs}\SpecialCharTok{$}\NormalTok{elevation}
+\NormalTok{elev}\SpecialCharTok{$}\NormalTok{elevation }\OtherTok{\textless{}{-}}\NormalTok{ elev}\SpecialCharTok{$}\NormalTok{elevation }\SpecialCharTok{{-}} \FunctionTok{mean}\NormalTok{(elev}\SpecialCharTok{$}\NormalTok{elevation, }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{)}
+
+\FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(elev) }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myBoundary, }\AttributeTok{alpha =} \DecValTok{0}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{coord\_fixed}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{2D-Template-analysis_files/figure-latex/unnamed-chunk-11-1.pdf}
+
+The elevation variable here is of class \texttt{SpatialGridDataFrame},
+that can be handled in the same way as the vegetation covariate.
+However, since in some cases data may be stored differently, and other
+methods are needed to access the stored values. In such cases, we can
+define a function that knows how to evaluate the covariate at arbitrary
+points in the survey region, and call that function in the component
+definition. In this case, we can use a powerful method from the `sp'
+package to do this. We use this to create the needed function.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{f.elev }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(x, y) \{}
+  \CommentTok{\# turn coordinates into SpatialPoints object:}
+  \CommentTok{\# with the appropriate coordinate reference system (CRS)}
+\NormalTok{  spp }\OtherTok{\textless{}{-}} \FunctionTok{SpatialPoints}\NormalTok{(}\FunctionTok{data.frame}\NormalTok{(}\AttributeTok{x =}\NormalTok{ x, }\AttributeTok{y =}\NormalTok{ y), }\AttributeTok{proj4string =} \FunctionTok{fm\_sp\_get\_crs}\NormalTok{(elev))}
+  \FunctionTok{proj4string}\NormalTok{(spp) }\OtherTok{\textless{}{-}} \FunctionTok{fm\_sp\_get\_crs}\NormalTok{(elev)}
+  \CommentTok{\# Extract elevation values at spp coords, from our elev SpatialGridDataFrame}
+\NormalTok{  v }\OtherTok{\textless{}{-}} \FunctionTok{over}\NormalTok{(spp, elev)}
+  \ControlFlowTok{if}\NormalTok{ (}\FunctionTok{any}\NormalTok{(}\FunctionTok{is.na}\NormalTok{(v}\SpecialCharTok{$}\NormalTok{elevation))) \{}
+\NormalTok{    v}\SpecialCharTok{$}\NormalTok{elevation }\OtherTok{\textless{}{-}}\NormalTok{ inlabru}\SpecialCharTok{:::}\FunctionTok{bru\_fill\_missing}\NormalTok{(elev, spp, v}\SpecialCharTok{$}\NormalTok{elevation)}
+\NormalTok{  \}}
+  \FunctionTok{return}\NormalTok{(v}\SpecialCharTok{$}\NormalTok{elevation)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+The model is fitted as follows:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{ecomp }\OtherTok{\textless{}{-}}\NormalTok{ coordinates }\SpecialCharTok{\textasciitilde{}} \FunctionTok{elev}\NormalTok{(}\FunctionTok{f.elev}\NormalTok{(x, y), }\AttributeTok{model =} \StringTok{"linear"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{Intercept}\NormalTok{(}\DecValTok{1}\NormalTok{)}
+\NormalTok{myVarGLM}\OtherTok{\textless{}{-}} \FunctionTok{lgcp}\NormalTok{(ecomp, myPoints, }\AttributeTok{samplers =}\NormalTok{ myBoundary, }\AttributeTok{domain =} \FunctionTok{list}\NormalTok{(}\AttributeTok{coordinates =}\NormalTok{ myMesh))}
+\FunctionTok{summary}\NormalTok{(myVarGLM)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## inlabru version: 2.5.2
+## INLA version: 22.05.07
+## Components:
+##   elev: Model types main='linear', group='exchangeable', replicate='iid'
+##   Intercept: Model types main='linear', group='exchangeable', replicate='iid'
+## Likelihoods:
+##   Family: 'cp'
+##     Data class: 'SpatialPointsDataFrame'
+##     Predictor: coordinates ~ .
+## Time used:
+##     Pre = 0.331, Running = 0.13, Post = 0.0343, Total = 0.495 
+## Fixed effects:
+##            mean    sd 0.025quant 0.5quant 0.975quant mode kld
+## elev      0.004 0.000      0.004    0.004      0.005   NA   0
+## Intercept 3.068 0.056      2.959    3.068      3.177   NA   0
+## 
+## Deviance Information Criterion (DIC) ...............: -952.12
+## Deviance Information Criterion (DIC, saturated) ....: -17729.16
+## Effective number of parameters .....................: -2246.11
+## 
+## Watanabe-Akaike information criterion (WAIC) ...: 1368.06
+## Effective number of parameters .................: 1.94
+## 
+## Marginal log-Likelihood:  -1788.51 
+##  is computed 
+## Posterior summaries for the linear predictor and the fitted values are computed
+## (Posterior marginals needs also 'control.compute=list(return.marginals.predictor=TRUE)')
+\end{verbatim}
+
+Predictions are made in same way as with factor variable
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df }\OtherTok{\textless{}{-}} \FunctionTok{pixels}\NormalTok{(myMesh, }\AttributeTok{mask =}\NormalTok{ myBoundary)}
+\NormalTok{int1 }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(myVarGLM, }\AttributeTok{data =}\NormalTok{ df, }\SpecialCharTok{\textasciitilde{}} \FunctionTok{exp}\NormalTok{(elev))}
+\FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(int1) }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myBoundary, }\AttributeTok{alpha =} \DecValTok{0}\NormalTok{, }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myPoints, }\AttributeTok{color =} \StringTok{"DarkGreen"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{coord\_equal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{2D-Template-analysis_files/figure-latex/unnamed-chunk-14-1.pdf}
+
+\hypertarget{iii.-spde-model-no-covariates}{%
+\subsection{III. SPDE model, no
+covariates}\label{iii.-spde-model-no-covariates}}
+
+\hypertarget{iii.1.-build-the-spde-mesh}{%
+\subsubsection{III.1. Build the SPDE
+mesh}\label{iii.1.-build-the-spde-mesh}}
+
+For this section I will ignore the fact that the gorillas data set comes
+with a predefined mesh and develop one from scratch. There are several
+arguments that can be used to build the mesh. The arguments for a
+two-dimensional mesh construction are the following:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{args}\NormalTok{(inla.mesh}\FloatTok{.2}\NormalTok{d)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## function (loc = NULL, loc.domain = NULL, offset = NULL, n = NULL, 
+##     boundary = NULL, interior = NULL, max.edge = NULL, min.angle = NULL, 
+##     cutoff = 1e-12, max.n.strict = NULL, max.n = NULL, plot.delay = NULL, 
+##     crs = NULL) 
+## NULL
+\end{verbatim}
+
+First, some reference about the study region is needed, which can be
+provided by either:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  The location of points, supplied on the \texttt{loc} argument
+  \footnote{Matrix of point locations to be used as initial
+    triangulation nodes. Can alternatively be a \texttt{SpatialPoints}
+    or \texttt{SpatialPointsDataFrame} object.}.
+\item
+  A boundary of the region defined by a set of polygons (e.g., a polygon
+  defining the coastline of the study) supplied on the \texttt{boundary}
+  argument.
+\item
+  The domain extent which can be supplied as a single polygon on the
+  \texttt{loc.domain} argument.
+\end{enumerate}
+
+Note that if either (1) the location of points or (3) the domain extent
+are specified, the mesh will be constructed based on a convex hull (a
+polygon of triangles out of the domain area). Alternatively, it is
+possible to include a non-convex hull as a boundary in the mesh
+construction instead of the \texttt{loc} or \texttt{loc.domain}
+arguments. This will result in the triangulation to be constrained by
+the boundary. A non-convex hull mesh can also be created by building a
+boundary for the points using the \texttt{inla.nonconvex.hull()}
+function. Finally, the other compulsory argument that needs to be
+specified is \texttt{max.edge} which determines the largest allowed
+triangle length (the lower the value for max.edge the higher the
+resolution). The value supplied to this argument can be either a scalar,
+in which case the value controls the triangle edge lengths in the inner
+domain, or a length two vector that controls the edge lengths in the
+inner domain and in the outer extension respectively. Notice that The
+value (or values) passed to the \texttt{max.edge} option must be on the
+same scale unit as the coordinates.
+
+While there is no general rule for setting a correct value for the
+\texttt{max.edge}, a value for \texttt{max.edge} that is too close to
+the spatial range will make the task of fitting a smooth SPDE difficult.
+On the other hand, if the \texttt{max.edge} value is too small compared
+to the spatial range, the mesh will have a large number of vertices
+leading to a more computationally demanding fitting process (which might
+not necessarily lead to better results). Thus, it is better to begin the
+analysis with a coarse matrix and evaluate the model on a finer grid as
+a final step. The \texttt{cutoff} option regulates the minimum length of
+each edge (could have been called ``min.edge'', more intuitively?).
+
+I first develop the mesh by using the boundary of the study area. (The
+\texttt{ggplot2} function \texttt{coord\_fixed()} sets the aspect ratio,
+which defaults to 1.)
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Build the mesh}
+\NormalTok{bbox}\OtherTok{\textless{}{-}}\FunctionTok{bbox}\NormalTok{(myBoundary)}
+\NormalTok{max.edge }\OtherTok{\textless{}{-}} \DecValTok{1}\SpecialCharTok{/}\DecValTok{20}\SpecialCharTok{*}\FunctionTok{sqrt}\NormalTok{((bbox[}\DecValTok{1}\NormalTok{,}\DecValTok{1}\NormalTok{]}\SpecialCharTok{{-}}\NormalTok{bbox[}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{])}\SpecialCharTok{\^{}}\DecValTok{2}\SpecialCharTok{+}\NormalTok{(bbox[}\DecValTok{2}\NormalTok{,}\DecValTok{1}\NormalTok{]}\SpecialCharTok{{-}}\NormalTok{bbox[}\DecValTok{2}\NormalTok{,}\DecValTok{2}\NormalTok{])}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+
+\NormalTok{myMesh2 }\OtherTok{\textless{}{-}} \FunctionTok{inla.mesh.2d}\NormalTok{(}\AttributeTok{boundary =}\NormalTok{ myBoundary,}
+                    \AttributeTok{max.edge =}\NormalTok{ max.edge,}
+                    \AttributeTok{cutoff=}\NormalTok{.}\DecValTok{1}\NormalTok{)}
+
+\CommentTok{\#plot(mesh)}
+
+\FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
+     \FunctionTok{gg}\NormalTok{(}\AttributeTok{data=}\NormalTok{myBoundary,}\AttributeTok{color=}\StringTok{\textquotesingle{}turquoise\textquotesingle{}}\NormalTok{,}\AttributeTok{fill=}\StringTok{\textquotesingle{}transparent\textquotesingle{}}\NormalTok{)}\SpecialCharTok{+}  
+  \FunctionTok{gg}\NormalTok{(myMesh2)}\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myPoints) }\SpecialCharTok{+}
+  \FunctionTok{coord\_fixed}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{ggtitle}\NormalTok{(}\StringTok{"Points"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{2D-Template-analysis_files/figure-latex/unnamed-chunk-16-1.pdf}
+
+We can also specify an outer layer with a lower triangle density
+(i.e.~where no points occur) to avoid this boundary effect. This can be
+done by supplying a vector of two values so that the spatial domain is
+divided into an inner and an outer area. Here, we will define the
+max.edge such that the outer layer will have a triangle density two
+times lower than than the inner layer (i.e.~twice the length for the
+outer layer edges).The amount to which the domain should be extended in
+the inner and outer part can be controlled with the offset argument of
+the inla.mesh.2d function. For this example we will expand the inner
+layer by the same amount as the max.edge and the outer layer by the
+range we assumed when defining the inner max.edge value (i.e.~1/4 of the
+spatial extent).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Build the mesh}
+\NormalTok{bbox}\OtherTok{\textless{}{-}}\FunctionTok{bbox}\NormalTok{(myBoundary)}
+\NormalTok{max.edge }\OtherTok{\textless{}{-}} \DecValTok{1}\SpecialCharTok{/}\DecValTok{20}\SpecialCharTok{*}\FunctionTok{sqrt}\NormalTok{((bbox[}\DecValTok{1}\NormalTok{,}\DecValTok{1}\NormalTok{]}\SpecialCharTok{{-}}\NormalTok{bbox[}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{])}\SpecialCharTok{\^{}}\DecValTok{2}\SpecialCharTok{+}\NormalTok{(bbox[}\DecValTok{2}\NormalTok{,}\DecValTok{1}\NormalTok{]}\SpecialCharTok{{-}}\NormalTok{bbox[}\DecValTok{2}\NormalTok{,}\DecValTok{2}\NormalTok{])}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+\NormalTok{bound.outer }\OtherTok{\textless{}{-}} \DecValTok{1}\SpecialCharTok{/}\DecValTok{4}\SpecialCharTok{*}\FunctionTok{sqrt}\NormalTok{((bbox[}\DecValTok{1}\NormalTok{,}\DecValTok{1}\NormalTok{]}\SpecialCharTok{{-}}\NormalTok{bbox[}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{])}\SpecialCharTok{\^{}}\DecValTok{2}\SpecialCharTok{+}\NormalTok{(bbox[}\DecValTok{2}\NormalTok{,}\DecValTok{1}\NormalTok{]}\SpecialCharTok{{-}}\NormalTok{bbox[}\DecValTok{2}\NormalTok{,}\DecValTok{2}\NormalTok{])}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+
+\NormalTok{myMesh3 }\OtherTok{\textless{}{-}} \FunctionTok{inla.mesh.2d}\NormalTok{(}\AttributeTok{boundary =}\NormalTok{ myBoundary,}
+                    \AttributeTok{max.edge =} \FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{)}\SpecialCharTok{*}\NormalTok{max.edge,}
+                    \AttributeTok{cutoff=}\NormalTok{.}\DecValTok{1}\NormalTok{,}
+                    \AttributeTok{offset=}\FunctionTok{c}\NormalTok{(max.edge, bound.outer))}
+
+\CommentTok{\#plot(mesh)}
+
+\FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
+     \FunctionTok{gg}\NormalTok{(}\AttributeTok{data=}\NormalTok{myBoundary,}\AttributeTok{color=}\StringTok{\textquotesingle{}turquoise\textquotesingle{}}\NormalTok{,}\AttributeTok{fill=}\StringTok{\textquotesingle{}transparent\textquotesingle{}}\NormalTok{)}\SpecialCharTok{+}  
+  \FunctionTok{gg}\NormalTok{(myMesh3)}\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myPoints) }\SpecialCharTok{+}
+  \FunctionTok{coord\_fixed}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{ggtitle}\NormalTok{(}\StringTok{"Points"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{2D-Template-analysis_files/figure-latex/unnamed-chunk-17-1.pdf}
+Alternatively, the mesh can be defined by the observation points.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Build the mesh}
+\NormalTok{bbox}\OtherTok{\textless{}{-}}\FunctionTok{bbox}\NormalTok{(myBoundary)}
+\NormalTok{max.edge }\OtherTok{\textless{}{-}} \DecValTok{1}\SpecialCharTok{/}\DecValTok{20}\SpecialCharTok{*}\FunctionTok{sqrt}\NormalTok{((bbox[}\DecValTok{1}\NormalTok{,}\DecValTok{1}\NormalTok{]}\SpecialCharTok{{-}}\NormalTok{bbox[}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{])}\SpecialCharTok{\^{}}\DecValTok{2}\SpecialCharTok{+}\NormalTok{(bbox[}\DecValTok{2}\NormalTok{,}\DecValTok{1}\NormalTok{]}\SpecialCharTok{{-}}\NormalTok{bbox[}\DecValTok{2}\NormalTok{,}\DecValTok{2}\NormalTok{])}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+\NormalTok{bound.outer }\OtherTok{\textless{}{-}} \DecValTok{1}\SpecialCharTok{/}\DecValTok{4}\SpecialCharTok{*}\FunctionTok{sqrt}\NormalTok{((bbox[}\DecValTok{1}\NormalTok{,}\DecValTok{1}\NormalTok{]}\SpecialCharTok{{-}}\NormalTok{bbox[}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{])}\SpecialCharTok{\^{}}\DecValTok{2}\SpecialCharTok{+}\NormalTok{(bbox[}\DecValTok{2}\NormalTok{,}\DecValTok{1}\NormalTok{]}\SpecialCharTok{{-}}\NormalTok{bbox[}\DecValTok{2}\NormalTok{,}\DecValTok{2}\NormalTok{])}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+
+\NormalTok{myMesh4 }\OtherTok{\textless{}{-}} \FunctionTok{inla.mesh.2d}\NormalTok{(}\AttributeTok{loc =}\NormalTok{ myPoints,}
+                    \AttributeTok{max.edge =} \FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{)}\SpecialCharTok{*}\NormalTok{max.edge,}
+                    \AttributeTok{cutoff=}\NormalTok{.}\DecValTok{1}\NormalTok{,}
+                    \AttributeTok{offset=}\FunctionTok{c}\NormalTok{(max.edge, bound.outer))}
+\CommentTok{\#plot(mesh)}
+
+\FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
+     \FunctionTok{gg}\NormalTok{(}\AttributeTok{data=}\NormalTok{myBoundary,}\AttributeTok{color=}\StringTok{\textquotesingle{}turquoise\textquotesingle{}}\NormalTok{)}\SpecialCharTok{+}  
+  \FunctionTok{gg}\NormalTok{(myMesh4)}\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myPoints) }\SpecialCharTok{+}
+  \FunctionTok{coord\_fixed}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{ggtitle}\NormalTok{(}\StringTok{"Points"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{2D-Template-analysis_files/figure-latex/unnamed-chunk-18-1.pdf}
+
+\hypertarget{iii.2.-the-model}{%
+\subsubsection{III.2. The model}\label{iii.2.-the-model}}
+
+First, specify spatial correlation structure. The following is an
+example using a Matern correlation structure with a PC prior.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{myCorrelation}\OtherTok{\textless{}{-}}\FunctionTok{inla.spde2.pcmatern}\NormalTok{(myMesh, }\AttributeTok{prior.range =} \FunctionTok{c}\NormalTok{(}\DecValTok{5}\NormalTok{, }\FloatTok{0.01}\NormalTok{), }\AttributeTok{prior.sigma =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.1}\NormalTok{, }\FloatTok{0.01}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+Then, define the model. The model formula requires the explicit name
+`coordinates' to recognise the mesh information that it will receive
+later, but can use the user-defined `mySmooth()' to specify the spatial
+error term.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{mySpdeComp}\OtherTok{\textless{}{-}}\NormalTok{coordinates}\SpecialCharTok{\textasciitilde{}}\FunctionTok{mySmooth}\NormalTok{(coordinates, }\AttributeTok{model=}\NormalTok{myCorrelation) }\SpecialCharTok{+} \FunctionTok{Intercept}\NormalTok{(}\DecValTok{1}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+The \texttt{lcgp} models is fitted as follows:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{mySpdeFit}\OtherTok{\textless{}{-}}\FunctionTok{lgcp}\NormalTok{(mySpdeComp, }\AttributeTok{data=}\NormalTok{myPoints, }\AttributeTok{samplers=}\NormalTok{myBoundary, }\AttributeTok{domain=}\FunctionTok{list}\NormalTok{(}\AttributeTok{coordinates=}\NormalTok{myMesh))}
+\end{Highlighting}
+\end{Shaded}
+
+Summary statistics:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(mySpdeFit)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## inlabru version: 2.5.2
+## INLA version: 22.05.07
+## Components:
+##   mySmooth: Model types main='spde', group='exchangeable', replicate='iid'
+##   Intercept: Model types main='linear', group='exchangeable', replicate='iid'
+## Likelihoods:
+##   Family: 'cp'
+##     Data class: 'SpatialPointsDataFrame'
+##     Predictor: coordinates ~ .
+## Time used:
+##     Pre = 0.813, Running = 8.91, Post = 0.6, Total = 10.3 
+## Fixed effects:
+##            mean  sd 0.025quant 0.5quant 0.975quant mode kld
+## Intercept 1.111 0.6     -0.099    1.121       2.27   NA   0
+## 
+## Random effects:
+##   Name     Model
+##     mySmooth SPDE2 model
+## 
+## Model hyperparameters:
+##                    mean    sd 0.025quant 0.5quant 0.975quant mode
+## Range for mySmooth 2.12 0.242      1.688     2.10       2.64   NA
+## Stdev for mySmooth 1.10 0.095      0.931     1.10       1.30   NA
+## 
+## Deviance Information Criterion (DIC) ...............: 509.41
+## Deviance Information Criterion (DIC, saturated) ....: -16267.64
+## Effective number of parameters .....................: -837.43
+## 
+## Watanabe-Akaike information criterion (WAIC) ...: 1584.57
+## Effective number of parameters .................: 138.94
+## 
+## Marginal log-Likelihood:  -1259.87 
+##  is computed 
+## Posterior summaries for the linear predictor and the fitted values are computed
+## (Posterior marginals needs also 'control.compute=list(return.marginals.predictor=TRUE)')
+\end{verbatim}
+
+\hypertarget{iii.3-inference}{%
+\subsubsection{III.3 Inference}\label{iii.3-inference}}
+
+Plotting fixed effect parameters
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{plot}\NormalTok{(mySpdeFit, }\StringTok{"Intercept"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{2D-Template-analysis_files/figure-latex/unnamed-chunk-23-1.pdf}
+
+Plotting spatial random effects Plots of the individual parameters
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{spde.range }\OtherTok{\textless{}{-}} \FunctionTok{spde.posterior}\NormalTok{(mySpdeFit, }\StringTok{"mySmooth"}\NormalTok{, }\AttributeTok{what =} \StringTok{"range"}\NormalTok{)}
+\NormalTok{spde.logvar }\OtherTok{\textless{}{-}} \FunctionTok{spde.posterior}\NormalTok{(mySpdeFit, }\StringTok{"mySmooth"}\NormalTok{, }\AttributeTok{what =} \StringTok{"log.variance"}\NormalTok{)}
+\NormalTok{range.plot }\OtherTok{\textless{}{-}} \FunctionTok{plot}\NormalTok{(spde.range)}
+\NormalTok{var.plot }\OtherTok{\textless{}{-}} \FunctionTok{plot}\NormalTok{(spde.logvar)}
+\FunctionTok{multiplot}\NormalTok{(range.plot, var.plot)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{2D-Template-analysis_files/figure-latex/unnamed-chunk-24-1.pdf}
+
+Plots of the correlation and covariance functions
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{corplot }\OtherTok{\textless{}{-}} \FunctionTok{plot}\NormalTok{(}\FunctionTok{spde.posterior}\NormalTok{(mySpdeFit, }\StringTok{"mySmooth"}\NormalTok{, }\AttributeTok{what =} \StringTok{"matern.correlation"}\NormalTok{))}
+\NormalTok{covplot }\OtherTok{\textless{}{-}} \FunctionTok{plot}\NormalTok{(}\FunctionTok{spde.posterior}\NormalTok{(mySpdeFit, }\StringTok{"mySmooth"}\NormalTok{, }\AttributeTok{what =} \StringTok{"matern.covariance"}\NormalTok{))}
+\FunctionTok{multiplot}\NormalTok{(covplot, corplot)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{2D-Template-analysis_files/figure-latex/unnamed-chunk-25-1.pdf}
+
+\hypertarget{iii.4-model-predictions}{%
+\subsubsection{III.4 Model predictions}\label{iii.4-model-predictions}}
+
+First need to generate the prediction data frame. The `pixels()' command
+generates a regular grid of points which can be used for the prediction.
+This is stored as a spatial data frame in the user-defined
+`myPredFrame'.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{myPredFrame}\OtherTok{\textless{}{-}}\FunctionTok{pixels}\NormalTok{(myMesh, }\AttributeTok{nx =} \DecValTok{50}\NormalTok{, }\AttributeTok{ny =} \DecValTok{50}\NormalTok{, }\AttributeTok{mask =} \ConstantTok{FALSE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+To constrain the predictions to a particular region (e.g.~the boundary
+of the mesh), set the mask option in the `pixels()' command to
+`mask=myBoundary'.
+
+Now we can generate the predictions.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{myPreds}\OtherTok{\textless{}{-}}\FunctionTok{predict}\NormalTok{(mySpdeFit, myPredFrame,}\SpecialCharTok{\textasciitilde{}} \FunctionTok{exp}\NormalTok{(mySmooth }\SpecialCharTok{+}\NormalTok{ Intercept))}
+\end{Highlighting}
+\end{Shaded}
+
+Note that multiple functions and linear predictors can be predicted
+simultaneously, under different names.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{myPreds}\OtherTok{\textless{}{-}}\FunctionTok{predict}\NormalTok{(mySpdeFit, myPredFrame,  }
+                 \SpecialCharTok{\textasciitilde{}} \FunctionTok{data.frame}\NormalTok{(}\AttributeTok{myLambda =} \FunctionTok{exp}\NormalTok{(mySmooth }\SpecialCharTok{+}\NormalTok{ Intercept),}
+                              \AttributeTok{myLoglambda =}\NormalTok{ mySmooth }\SpecialCharTok{+}\NormalTok{ Intercept)}
+\NormalTok{                )}
+\end{Highlighting}
+\end{Shaded}
+
+We can visualize multiple aspects of the predictions
+
+Plotting intensity and log-intensity surfaces
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{pl1 }\OtherTok{\textless{}{-}} \FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myPreds}\SpecialCharTok{$}\NormalTok{myLambda) }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myBoundary) }\SpecialCharTok{+}
+  \FunctionTok{ggtitle}\NormalTok{(}\StringTok{"LGCP fit to Points"}\NormalTok{, }\AttributeTok{subtitle =} \StringTok{"(Response Scale)"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{coord\_fixed}\NormalTok{()}
+\NormalTok{pl2 }\OtherTok{\textless{}{-}} \FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myPreds}\SpecialCharTok{$}\NormalTok{myLoglambda) }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myBoundary) }\SpecialCharTok{+}
+  \FunctionTok{ggtitle}\NormalTok{(}\StringTok{"LGCP fit to Points"}\NormalTok{, }\AttributeTok{subtitle =} \StringTok{"(Linear Predictor Scale)"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{coord\_fixed}\NormalTok{()}
+\FunctionTok{multiplot}\NormalTok{(pl1, pl2, }\AttributeTok{cols =} \DecValTok{2}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{2D-Template-analysis_files/figure-latex/unnamed-chunk-29-1.pdf}
+
+Alternatively, plotting maps of median, lower 95\% and upper 95\%
+density surfaces as follows (assuming that the predicted intensity is in
+object \texttt{myLambda}).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(}\FunctionTok{cbind}\NormalTok{(myPreds}\SpecialCharTok{$}\NormalTok{myLambda, }\FunctionTok{data.frame}\NormalTok{(}\AttributeTok{property =} \StringTok{"q0.500"}\NormalTok{)), }\FunctionTok{aes}\NormalTok{(}\AttributeTok{fill =}\NormalTok{ median)) }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(}\FunctionTok{cbind}\NormalTok{(myPreds}\SpecialCharTok{$}\NormalTok{myLambda, }\FunctionTok{data.frame}\NormalTok{(}\AttributeTok{property =} \StringTok{"q0.025"}\NormalTok{)), }\FunctionTok{aes}\NormalTok{(}\AttributeTok{fill =}\NormalTok{ q0}\FloatTok{.025}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(}\FunctionTok{cbind}\NormalTok{(myPreds}\SpecialCharTok{$}\NormalTok{myLambda, }\FunctionTok{data.frame}\NormalTok{(}\AttributeTok{property =} \StringTok{"q0.975"}\NormalTok{)), }\FunctionTok{aes}\NormalTok{(}\AttributeTok{fill =}\NormalTok{ q0}\FloatTok{.975}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{coord\_equal}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{facet\_wrap}\NormalTok{(}\SpecialCharTok{\textasciitilde{}}\NormalTok{property)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{2D-Template-analysis_files/figure-latex/unnamed-chunk-30-1.pdf}
+
+\hypertarget{iii.5-estimating-abundance}{%
+\subsubsection{III.5 Estimating
+abundance}\label{iii.5-estimating-abundance}}
+
+Estimating abundance uses the \texttt{predict} function. As a first step
+we need an estimate for the integrated lambda (denoted `Lambda' with an
+upper case L). The integration \texttt{weight} values (the quadrature
+points) are contained in the \texttt{ipoints} output.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{Lambda }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(}
+\NormalTok{  mySpdeFit,}
+  \FunctionTok{ipoints}\NormalTok{(myBoundary, myMesh),}
+  \SpecialCharTok{\textasciitilde{}} \FunctionTok{sum}\NormalTok{(weight }\SpecialCharTok{*} \FunctionTok{exp}\NormalTok{(mySmooth }\SpecialCharTok{+}\NormalTok{ Intercept))}
+\NormalTok{)}
+\NormalTok{Lambda}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##       mean       sd   q0.025   median   q0.975     smin     smax         cv
+## 1 667.8037 25.25539 624.4276 668.8877 713.6399 612.9579 724.0196 0.03781859
+##        var
+## 1 637.8349
+\end{verbatim}
+
+Use the median and 95\%iles of this to determine interval boundaries for
+estimating the posterior abundance distribution (prediction, not
+credible interval).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{abundance }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(}
+\NormalTok{  mySpdeFit, }\FunctionTok{ipoints}\NormalTok{(myBoundary, myMesh),}
+  \SpecialCharTok{\textasciitilde{}} \FunctionTok{data.frame}\NormalTok{(}
+    \AttributeTok{N =} \DecValTok{500}\SpecialCharTok{:}\DecValTok{800}\NormalTok{,}
+    \FunctionTok{dpois}\NormalTok{(}\DecValTok{500}\SpecialCharTok{:}\DecValTok{800}\NormalTok{,}
+      \AttributeTok{lambda =} \FunctionTok{sum}\NormalTok{(weight }\SpecialCharTok{*} \FunctionTok{exp}\NormalTok{(mySmooth }\SpecialCharTok{+}\NormalTok{ Intercept))}
+\NormalTok{    )}
+\NormalTok{  )}
+\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Can get the quantiles of the posterior for abundance via
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{inla.qmarginal}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\FloatTok{0.025}\NormalTok{, }\FloatTok{0.5}\NormalTok{, }\FloatTok{0.975}\NormalTok{), }\AttributeTok{marginal =} \FunctionTok{list}\NormalTok{(}\AttributeTok{x =}\NormalTok{ abundance}\SpecialCharTok{$}\NormalTok{N, }\AttributeTok{y =}\NormalTok{ abundance}\SpecialCharTok{$}\NormalTok{mean))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 596.0300 669.6573 743.4536
+\end{verbatim}
+
+\ldots{} the mean via
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{inla.emarginal}\NormalTok{(identity, }\AttributeTok{marginal =} \FunctionTok{list}\NormalTok{(}\AttributeTok{x =}\NormalTok{ abundance}\SpecialCharTok{$}\NormalTok{N, }\AttributeTok{y =}\NormalTok{ abundance}\SpecialCharTok{$}\NormalTok{mean))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 669.8262
+\end{verbatim}
+
+and plot posteriors:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{abundance}\SpecialCharTok{$}\NormalTok{plugin\_estimate }\OtherTok{\textless{}{-}} \FunctionTok{dpois}\NormalTok{(abundance}\SpecialCharTok{$}\NormalTok{N, }\AttributeTok{lambda =}\NormalTok{ Lambda}\SpecialCharTok{$}\NormalTok{mean)}
+\FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data =}\NormalTok{ abundance) }\SpecialCharTok{+}
+  \FunctionTok{geom\_line}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ N, }\AttributeTok{y =}\NormalTok{ mean, }\AttributeTok{colour =} \StringTok{"Posterior"}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_line}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ N, }\AttributeTok{y =}\NormalTok{ plugin\_estimate, }\AttributeTok{colour =} \StringTok{"Plugin"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{2D-Template-analysis_files/figure-latex/unnamed-chunk-35-1.pdf}
+
+\hypertarget{iv.-factor-glm-with-spde-spatial-term}{%
+\subsection{IV. Factor GLM with SPDE spatial
+term}\label{iv.-factor-glm-with-spde-spatial-term}}
+
+This will borrow the same (Matern) correlation structure as defined in
+part III above \texttt{myCorrelation}. The combined model is defined as
+follows. Note the removal of the intercept under the factor model
+`factor\_full'.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{mySpdeGlmComp }\OtherTok{\textless{}{-}}\NormalTok{ coordinates }\SpecialCharTok{\textasciitilde{}}
+\SpecialCharTok{{-}}\DecValTok{1} \SpecialCharTok{+}\FunctionTok{vegetation}\NormalTok{(myCovs}\SpecialCharTok{$}\NormalTok{vegetation, }\AttributeTok{model =} \StringTok{"factor\_full"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{mySmooth}\NormalTok{(coordinates, }\AttributeTok{model =}\NormalTok{ myCorrelation)}
+\end{Highlighting}
+\end{Shaded}
+
+Model is fitted:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{fitSpdeGlm }\OtherTok{\textless{}{-}} \FunctionTok{lgcp}\NormalTok{(mySpdeGlmComp, myPoints, }\AttributeTok{samplers =}\NormalTok{ myBoundary, }\AttributeTok{domain =} \FunctionTok{list}\NormalTok{(}\AttributeTok{coordinates =}\NormalTok{ myMesh))}
+\end{Highlighting}
+\end{Shaded}
+
+Spatial plot of the fitted (median) intensity surface:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df }\OtherTok{\textless{}{-}} \FunctionTok{pixels}\NormalTok{(myMesh, }\AttributeTok{mask =}\NormalTok{ myBoundary)}
+\NormalTok{int2 }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(fitSpdeGlm , df, }\SpecialCharTok{\textasciitilde{}} \FunctionTok{exp}\NormalTok{(mySmooth }\SpecialCharTok{+}\NormalTok{ vegetation), }\AttributeTok{n.samples =} \DecValTok{1000}\NormalTok{)}
+\FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(int2, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{fill =}\NormalTok{ median)) }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myBoundary, }\AttributeTok{alpha =} \DecValTok{0}\NormalTok{, }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myPoints) }\SpecialCharTok{+}
+  \FunctionTok{coord\_equal}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{2D-Template-analysis_files/figure-latex/unnamed-chunk-38-1.pdf}
+\ldots{} and the expected integrated intensity (mean of abundance)
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{Lambda2 }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(}
+\NormalTok{  fitSpdeGlm,}
+  \FunctionTok{ipoints}\NormalTok{(myBoundary, myMesh),}
+  \SpecialCharTok{\textasciitilde{}} \FunctionTok{sum}\NormalTok{(weight }\SpecialCharTok{*} \FunctionTok{exp}\NormalTok{(mySmooth }\SpecialCharTok{+}\NormalTok{ vegetation))}
+\NormalTok{)}
+\NormalTok{Lambda2}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##       mean       sd   q0.025   median   q0.975     smin     smax        cv
+## 1 671.8974 23.10534 627.3458 670.3393 718.0804 623.0767 730.8035 0.0343882
+##        var
+## 1 533.8569
+\end{verbatim}
+
+To look at the contributions to the linear predictor from the SPDE and
+from vegetation, we can first generate predictions from those combined,
+and individually.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lp2 }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(fitSpdeGlm, df, }\SpecialCharTok{\textasciitilde{}} \FunctionTok{list}\NormalTok{(}
+  \AttributeTok{smooth\_veg =}\NormalTok{ mySmooth }\SpecialCharTok{+}\NormalTok{ vegetation,}
+  \AttributeTok{smooth =}\NormalTok{ mySmooth,}
+  \AttributeTok{veg =}\NormalTok{ vegetation}
+\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+The function \texttt{scale\_fill\_gradientn} sets the scale for the plot
+legend. Here, we set it to span the range of the three linear predictor
+components being plotted (medians are plotted by default).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lprange }\OtherTok{\textless{}{-}} \FunctionTok{range}\NormalTok{(lp2}\SpecialCharTok{$}\NormalTok{smooth\_veg}\SpecialCharTok{$}\NormalTok{median, lp2}\SpecialCharTok{$}\NormalTok{smooth}\SpecialCharTok{$}\NormalTok{median, lp2}\SpecialCharTok{$}\NormalTok{veg}\SpecialCharTok{$}\NormalTok{median)}
+\NormalTok{csc }\OtherTok{\textless{}{-}} \FunctionTok{scale\_fill\_gradientn}\NormalTok{(}\AttributeTok{colours =} \FunctionTok{brewer.pal}\NormalTok{(}\DecValTok{9}\NormalTok{, }\StringTok{"YlOrRd"}\NormalTok{), }\AttributeTok{limits =}\NormalTok{ lprange)}
+\NormalTok{plot.lp2 }\OtherTok{\textless{}{-}} \FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(lp2}\SpecialCharTok{$}\NormalTok{smooth\_veg) }\SpecialCharTok{+}
+\NormalTok{  csc }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.position =} \StringTok{"bottom"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myBoundary, }\AttributeTok{alpha =} \DecValTok{0}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{ggtitle}\NormalTok{(}\StringTok{"mySmooth + vegetation"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{coord\_equal}\NormalTok{()}
+\NormalTok{plot.lp2.spde }\OtherTok{\textless{}{-}} \FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(lp2}\SpecialCharTok{$}\NormalTok{smooth) }\SpecialCharTok{+}
+\NormalTok{  csc }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.position =} \StringTok{"bottom"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myBoundary, }\AttributeTok{alpha =} \DecValTok{0}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{ggtitle}\NormalTok{(}\StringTok{"mySmooth"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{coord\_equal}\NormalTok{()}
+\NormalTok{plot.lp2.veg }\OtherTok{\textless{}{-}} \FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(lp2}\SpecialCharTok{$}\NormalTok{veg) }\SpecialCharTok{+}
+\NormalTok{  csc }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.position =} \StringTok{"bottom"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myBoundary, }\AttributeTok{alpha =} \DecValTok{0}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{ggtitle}\NormalTok{(}\StringTok{"vegetation"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{coord\_equal}\NormalTok{()}
+\FunctionTok{multiplot}\NormalTok{(plot.lp2, plot.lp2.spde, plot.lp2.veg, }\AttributeTok{cols =} \DecValTok{3}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{2D-Template-analysis_files/figure-latex/unnamed-chunk-41-1.pdf}
+
+The uncertainty in this model can be explored via the coefficient of
+variation plot
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(int2, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{fill =}\NormalTok{ sd }\SpecialCharTok{/}\NormalTok{ mean)) }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myBoundary, }\AttributeTok{alpha =} \DecValTok{0}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{gg}\NormalTok{(myPoints) }\SpecialCharTok{+}
+  \FunctionTok{coord\_fixed}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{2D-Template-analysis_files/figure-latex/unnamed-chunk-42-1.pdf}
+
+\hypertarget{model-comparisons}{%
+\subsubsection{Model comparisons}\label{model-comparisons}}
+
+NOTE: the behaviour of DIC and WAIC is currently a bit unclear, in
+particular for experimental mode, and is being investigated./1
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{knitr}\SpecialCharTok{::}\FunctionTok{kable}\NormalTok{(}\FunctionTok{cbind}\NormalTok{(}
+  \FunctionTok{deltaIC}\NormalTok{(myFactorGLM , mySpdeFit, fitSpdeGlm, }\AttributeTok{criterion =} \FunctionTok{c}\NormalTok{(}\StringTok{"DIC"}\NormalTok{)),}
+  \FunctionTok{deltaIC}\NormalTok{(myFactorGLM , mySpdeFit, fitSpdeGlm, }\AttributeTok{criterion =} \FunctionTok{c}\NormalTok{(}\StringTok{"WAIC"}\NormalTok{))))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{longtable}[]{@{}lrrlrr@{}}
+\toprule
+Model & DIC & Delta.DIC & Model & WAIC & Delta.WAIC \\
+\midrule
+\endhead
+myFactorGLM & -563.3583 & 0.000 & myFactorGLM & 1373.241 & 0.000 \\
+mySpdeFit & 509.4095 & 1072.768 & mySpdeFit & 1584.569 & 211.328 \\
+fitSpdeGlm & 597.6010 & 1160.959 & fitSpdeGlm & 1636.821 & 263.580 \\
+\bottomrule
+\end{longtable}
+
+\end{document}
