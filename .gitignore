@@ -2,3 +2,12 @@
 .Rhistory
 .RData
 .Ruserdata
+.DS_Store
+N00W100_agb.tif
+N00W100_agb_err.tif
+PER_msk_alt.grd
+PER_msk_alt.gri
+PER_msk_alt.vrt
+PROBAV_LC100_global_v3.0.1_2019-nrt_Crops-CoverFraction-layer_EPSG-4326.tif
+Source_covariates.R
+gadm36_PER_1_sp.rds
